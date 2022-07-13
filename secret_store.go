@@ -65,30 +65,8 @@ func NewEnvStore(vc viewer.Context, config *api.ParameterStoreConfig) (*EnvStore
 	return store, nil
 }
 
-// Returns names of stored env-vars
-func (s *EnvStore) List(vc viewer.Context, environment string) ([]string, error) {
+func (s *EnvStore) Get(vc viewer.Context, environment string) (map[string]string, error) {
 	filters := buildParameterFilters(envSecType_EnvVar, vc, environment)
-	parameters, err := s.store.listParameters(vc, filters)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	var names []string
-	for _, p := range parameters {
-		if name, defined := p.resolveParameterTag("name"); defined {
-			names = append(names, name)
-		}
-	}
-	return names, nil
-}
-
-// Returns values associated with requested env-vars
-func (s *EnvStore) Get(vc viewer.Context, environment string, names []string) (map[string]string, error) {
-	filters := buildParameterFilters(envSecType_EnvVar, vc, environment)
-	filters = append(filters, types.ParameterStringFilter{
-		Key:    aws.String("tag:name"),
-		Values: names,
-	})
 
 	parameters, err := s.store.listParameters(vc, filters)
 	if err != nil {
@@ -163,12 +141,11 @@ func (s *EnvStore) Set(
 	}
 
 	// Internal error: duplicate ambiguous definitions
-	return errors.WithStack(errors.Errorf("duplicate definitions for environment secret %s", name))
+	return errors.WithStack(errors.Errorf("duplicate definitions for environment variable %s", name))
 }
 
-// TODO savil. Rename to Delete.
-// Deletes stored environment secrets
-func (s *EnvStore) DeleteEnvironmentSecrets(vc viewer.Context, environment string, names []string) error {
+// Deletes stored environment
+func (s *EnvStore) Delete(vc viewer.Context, environment string, names []string) error {
 	filters := buildParameterFilters(envSecType_EnvVar, vc, environment)
 	filters = append(filters, types.ParameterStringFilter{
 		Key:    aws.String("tag:name"),
@@ -317,11 +294,11 @@ func (s *EnvStore) DeleteSecretFile(vc viewer.Context, environment string, filen
 	return nil
 }
 
-func buildParameterFilters(secretKind envSecType, vc viewer.Context, environment string) []types.
-	ParameterStringFilter {
+func buildParameterFilters(kind envSecType, vc viewer.Context, environment string) []types.ParameterStringFilter {
+
 	filters := []types.ParameterStringFilter{{
 		Key:    aws.String("tag:kind"),
-		Values: []string{string(secretKind)},
+		Values: []string{string(kind)},
 	}}
 	if vc.OrgDomain() != "" {
 		filters = append(filters, types.ParameterStringFilter{
@@ -343,7 +320,7 @@ func buildParameterFilters(secretKind envSecType, vc viewer.Context, environment
 	return filters
 }
 
-func buildParameterTags(secretKind envSecType, secretTags map[string]string) []types.Tag {
+func buildParameterTags(kind envSecType, secretTags map[string]string) []types.Tag {
 	var parameterTags []types.Tag
 	for tag, value := range secretTags {
 		parameterTags = append(parameterTags, types.Tag{
@@ -351,7 +328,7 @@ func buildParameterTags(secretKind envSecType, secretTags map[string]string) []t
 		})
 	}
 	parameterTags = append(parameterTags, types.Tag{
-		Key: aws.String("kind"), Value: aws.String(string(secretKind)),
+		Key: aws.String("kind"), Value: aws.String(string(kind)),
 	})
 	return parameterTags
 }
