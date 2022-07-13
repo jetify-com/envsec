@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"go.jetpack.io/axiom/opensource/cmd/jetpack/viewer"
@@ -57,10 +58,17 @@ func (s *EnvStore) List(vc viewer.Context, environment string) (map[string]strin
 		return map[string]string{}, nil
 	}
 
-	values, err := s.store.loadParametersValues(vc, parameters)
-	if err != nil {
-		return nil, errors.WithStack(err)
+	// We need to loadParameterValues in chunks of 10, due to AWS API limits
+	paramChunks := lo.Chunk(parameters, 10)
+	valueChunks := []map[string]string{}
+	for _, paramChunk := range paramChunks {
+		values, err := s.store.loadParametersValues(vc, paramChunk)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		valueChunks = append(valueChunks, values)
 	}
+	values := lo.Assign(valueChunks...)
 
 	result := map[string]string{}
 	for id, value := range values {
