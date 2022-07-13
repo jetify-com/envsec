@@ -41,7 +41,7 @@ type EnvStore struct {
 	store *parameterStore
 }
 
-func NewEnvStore(vc viewer.Context, environment api.Environment, config *api.ParameterStoreConfig) (*EnvStore, error) {
+func NewEnvStore(vc viewer.Context, config *api.ParameterStoreConfig) (*EnvStore, error) {
 	var p string
 	if vc.OrgDomain() != "" {
 		domain, err := kubevalidate.ToValidName(vc.OrgDomain())
