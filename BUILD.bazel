@@ -1,0 +1,47 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "paramstore",
+    srcs = [
+        "parameter_store.go",
+        "secret_store.go",
+    ],
+    importpath = "go.jetpack.io/axiom/opensource/paramstore",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//opensource/cmd/jetpack/viewer",
+        "//opensource/goutil/errorutil",
+        "//opensource/kubevalidate",
+        "//opensource/proto/api",
+        "@com_github_aws_aws_sdk_go//aws",
+        "@com_github_aws_aws_sdk_go_v2_credentials//:credentials",
+        "@com_github_aws_aws_sdk_go_v2_service_ssm//:ssm",
+        "@com_github_aws_aws_sdk_go_v2_service_ssm//types",
+        "@com_github_google_uuid//:uuid",
+        "@com_github_pkg_errors//:errors",
+        "@com_github_samber_lo//:lo",
+    ],
+)
+
+go_library(
+    name = "envsec",
+    srcs = [
+        "parameter_store.go",
+        "secret_store.go",
+    ],
+    importpath = "go.jetpack.io/axiom/opensource/envsec",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//opensource/cmd/jetpack/viewer",
+        "//opensource/goutil/errorutil",
+        "//opensource/kubevalidate",
+        "//opensource/proto/api",
+        "@com_github_aws_aws_sdk_go//aws",
+        "@com_github_aws_aws_sdk_go_v2_credentials//:credentials",
+        "@com_github_aws_aws_sdk_go_v2_service_ssm//:ssm",
+        "@com_github_aws_aws_sdk_go_v2_service_ssm//types",
+        "@com_github_google_uuid//:uuid",
+        "@com_github_pkg_errors//:errors",
+        "@com_github_samber_lo//:lo",
+    ],
+)
