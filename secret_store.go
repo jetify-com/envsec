@@ -45,7 +45,7 @@ func NewEnvStore(vc viewer.Context, config *ParameterStoreConfig) (*EnvStore, er
 	return store, nil
 }
 
-func (s *EnvStore) Get(vc viewer.Context, environment string) (map[string]string, error) {
+func (s *EnvStore) List(vc viewer.Context, environment string) (map[string]string, error) {
 	filters := buildParameterFilters(envSecType_EnvVar, vc, environment)
 
 	parameters, err := s.store.listParameters(vc, filters)
