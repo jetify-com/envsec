@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/pkg/errors"
-	"go.jetpack.io/axiom/opensource/proto/api"
 )
 
 type parameter struct {
@@ -34,8 +33,16 @@ func (p *parameter) resolveParameterTag(tag string) (string, bool) {
 	return aws.StringValue(parameterTag.Value), true
 }
 
+type ParameterStoreConfig struct {
+	Region          string
+	AccessKeyId     string
+	SecretAccessKey string
+	SessionToken    string
+	KmsKeyId        string
+}
+
 type parameterStore struct {
-	config *api.ParameterStoreConfig
+	config *ParameterStoreConfig
 	path   string
 }
 
@@ -43,7 +50,7 @@ type parameterStore struct {
 const parameterValueMaxLength = 4 * 1024
 
 // New parameter store for current user/organization.
-func newParameterStore(config *api.ParameterStoreConfig, path string) *parameterStore {
+func newParameterStore(config *ParameterStoreConfig, path string) *parameterStore {
 	return &parameterStore{
 		config: config,
 		path:   path,

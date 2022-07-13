@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"go.jetpack.io/axiom/opensource/cmd/jetpack/viewer"
 	"go.jetpack.io/axiom/opensource/kubevalidate"
-	"go.jetpack.io/axiom/opensource/proto/api"
 )
 
 type envSecType string
@@ -22,7 +21,7 @@ type EnvStore struct {
 	store *parameterStore
 }
 
-func NewEnvStore(vc viewer.Context, config *api.ParameterStoreConfig) (*EnvStore, error) {
+func NewEnvStore(vc viewer.Context, config *ParameterStoreConfig) (*EnvStore, error) {
 	var p string
 	if vc.OrgDomain() != "" {
 		domain, err := kubevalidate.ToValidName(vc.OrgDomain())
