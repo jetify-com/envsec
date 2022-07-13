@@ -1,10 +1,7 @@
 package envsec
 
 import (
-	"encoding/base64"
-	"os"
 	"path"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/pkg/errors"
@@ -15,26 +12,10 @@ import (
 	"go.jetpack.io/axiom/opensource/proto/api"
 )
 
-// TODO savil. Delete.
-type SecretFile struct {
-	// The name of the stored parameter:
-	//    * Parameter names are case sensitive.
-	//    * Parameter names may only include the following symbols and letters a-zA-Z0-9_.-
-	//    * A parameter name can't include spaces.
-	Path string
-
-	// User supplied description of parameter.
-	Description string
-
-	// Last modification date and time.
-	LastModified *time.Time
-}
-
 type envSecType string
 
 const (
 	envSecType_EnvVar envSecType = "ENVIRONMENT_VARIABLE"
-	envSecType_File   envSecType = "FILE"
 )
 
 type EnvStore struct {
@@ -156,137 +137,6 @@ func (s *EnvStore) Delete(vc viewer.Context, environment string, names []string)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
-	if 0 < len(parameters) {
-		return s.store.deleteParameters(vc, parameters)
-	}
-	return nil
-}
-
-// TODO savil. Delete.
-// Returns information about stored secret files
-func (s *EnvStore) ListSecretFiles(vc viewer.Context, environment string) ([]*SecretFile, error) {
-	filters := buildParameterFilters(envSecType_File, vc, environment)
-	parameters, err := s.store.listParameters(vc, filters)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	var variables []*SecretFile
-	for _, p := range parameters {
-		if path, defined := p.resolveParameterTag("filename"); defined {
-			variables = append(variables, &SecretFile{
-				Path:         path,
-				Description:  p.description,
-				LastModified: p.lastModified,
-			})
-		}
-	}
-	return variables, nil
-}
-
-// Returns content associated with a set of secret files
-func (s *EnvStore) LoadSecretFilesContent(vc viewer.Context, environment string, filenames []string) (map[string]string, error) {
-	filters := buildParameterFilters(envSecType_File, vc, environment)
-	filters = append(filters, types.ParameterStringFilter{
-		Key:    aws.String("tag:filename"),
-		Values: filenames,
-	})
-
-	parameters, err := s.store.listParameters(vc, filters)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	if 0 < len(parameters) {
-		values, err := s.store.loadParametersValues(vc, parameters)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-
-		result := map[string]string{}
-		for id, content := range values {
-			for _, p := range parameters {
-				if p.id == id {
-					if filename, defined := p.resolveParameterTag("filename"); defined {
-						result[filename] = content
-					}
-				}
-			}
-		}
-		return result, nil
-	}
-	return map[string]string{}, nil
-}
-
-// TODO savil. Delete.
-// Stores or updates an environment secret
-func (s *EnvStore) StoreSecretFile(vc viewer.Context, environment string, v *SecretFile) error {
-	secretTags, err := buildSecretTags(vc, environment)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	filename := path.Base(v.Path)
-	filters := buildParameterFilters(envSecType_File, vc, environment)
-	filters = append(filters, types.ParameterStringFilter{
-		Key:    aws.String("tag:filename"),
-		Values: []string{filename},
-	})
-
-	parameters, err := s.store.listParameters(vc, filters)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	content, err := os.ReadFile(v.Path)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	if len(parameters) == 0 {
-		tags := buildParameterTags(envSecType_File, secretTags)
-		tags = append(tags, types.Tag{
-			Key: aws.String("filename"), Value: aws.String(filename),
-		})
-
-		// New parameter definition
-		parameter := &parameter{
-			description: v.Description,
-			tags:        tags,
-		}
-		return s.store.newParameter(vc, parameter, base64.StdEncoding.EncodeToString(content))
-	}
-
-	if len(parameters) == 1 {
-		// Parameter with the same name is already defined
-		parameter := parameters[0]
-		if v.Description != "" {
-			// TODO: find a way to remove the description if the user so desires
-			parameter.description = v.Description
-		}
-		return s.store.storeParameterValue(vc, parameter, base64.StdEncoding.EncodeToString(content))
-	}
-
-	// Internal error: duplicate ambiguous definitions
-	return errors.WithStack(errors.Errorf("duplicate definitions for secret file %s", filename))
-}
-
-// TODO savil. Delete.
-// Deletes a stored environment secret
-func (s *EnvStore) DeleteSecretFile(vc viewer.Context, environment string, filename string) error {
-	filters := buildParameterFilters(envSecType_File, vc, environment)
-	filters = append(filters, types.ParameterStringFilter{
-		Key:    aws.String("tag:filename"),
-		Values: []string{filename},
-	})
-
-	parameters, err := s.store.listParameters(vc, filters)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	vc.Logger().BoldPrintf("Parameters %v\n", parameters)
 
 	if 0 < len(parameters) {
 		return s.store.deleteParameters(vc, parameters)
