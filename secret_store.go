@@ -66,7 +66,7 @@ func NewEnvStore(vc viewer.Context, config *api.ParameterStoreConfig) (*EnvStore
 }
 
 // Returns names of stored env-vars
-func (s *EnvStore) List(vc viewer.Context, environment api.Environment) ([]string, error) {
+func (s *EnvStore) List(vc viewer.Context, environment string) ([]string, error) {
 	filters := buildParameterFilters(envSecType_EnvVar, vc, environment)
 	parameters, err := s.store.listParameters(vc, filters)
 	if err != nil {
@@ -83,7 +83,7 @@ func (s *EnvStore) List(vc viewer.Context, environment api.Environment) ([]strin
 }
 
 // Returns values associated with requested env-vars
-func (s *EnvStore) Get(vc viewer.Context, environment api.Environment, names []string) (map[string]string, error) {
+func (s *EnvStore) Get(vc viewer.Context, environment string, names []string) (map[string]string, error) {
 	filters := buildParameterFilters(envSecType_EnvVar, vc, environment)
 	filters = append(filters, types.ParameterStringFilter{
 		Key:    aws.String("tag:name"),
@@ -120,7 +120,7 @@ func (s *EnvStore) Get(vc viewer.Context, environment api.Environment, names []s
 // Stores or updates an env-var
 func (s *EnvStore) Set(
 	vc viewer.Context,
-	environment api.Environment,
+	environment string,
 	projectID string,
 	name string,
 	value string,
@@ -168,7 +168,7 @@ func (s *EnvStore) Set(
 
 // TODO savil. Rename to Delete.
 // Deletes stored environment secrets
-func (s *EnvStore) DeleteEnvironmentSecrets(vc viewer.Context, environment api.Environment, names []string) error {
+func (s *EnvStore) DeleteEnvironmentSecrets(vc viewer.Context, environment string, names []string) error {
 	filters := buildParameterFilters(envSecType_EnvVar, vc, environment)
 	filters = append(filters, types.ParameterStringFilter{
 		Key:    aws.String("tag:name"),
@@ -188,7 +188,7 @@ func (s *EnvStore) DeleteEnvironmentSecrets(vc viewer.Context, environment api.E
 
 // TODO savil. Delete.
 // Returns information about stored secret files
-func (s *EnvStore) ListSecretFiles(vc viewer.Context, environment api.Environment) ([]*SecretFile, error) {
+func (s *EnvStore) ListSecretFiles(vc viewer.Context, environment string) ([]*SecretFile, error) {
 	filters := buildParameterFilters(envSecType_File, vc, environment)
 	parameters, err := s.store.listParameters(vc, filters)
 	if err != nil {
@@ -209,7 +209,7 @@ func (s *EnvStore) ListSecretFiles(vc viewer.Context, environment api.Environmen
 }
 
 // Returns content associated with a set of secret files
-func (s *EnvStore) LoadSecretFilesContent(vc viewer.Context, environment api.Environment, filenames []string) (map[string]string, error) {
+func (s *EnvStore) LoadSecretFilesContent(vc viewer.Context, environment string, filenames []string) (map[string]string, error) {
 	filters := buildParameterFilters(envSecType_File, vc, environment)
 	filters = append(filters, types.ParameterStringFilter{
 		Key:    aws.String("tag:filename"),
@@ -244,7 +244,7 @@ func (s *EnvStore) LoadSecretFilesContent(vc viewer.Context, environment api.Env
 
 // TODO savil. Delete.
 // Stores or updates an environment secret
-func (s *EnvStore) StoreSecretFile(vc viewer.Context, environment api.Environment, v *SecretFile) error {
+func (s *EnvStore) StoreSecretFile(vc viewer.Context, environment string, v *SecretFile) error {
 	secretTags, err := buildSecretTags(vc, environment)
 	if err != nil {
 		return errors.WithStack(err)
@@ -297,7 +297,7 @@ func (s *EnvStore) StoreSecretFile(vc viewer.Context, environment api.Environmen
 
 // TODO savil. Delete.
 // Deletes a stored environment secret
-func (s *EnvStore) DeleteSecretFile(vc viewer.Context, environment api.Environment, filename string) error {
+func (s *EnvStore) DeleteSecretFile(vc viewer.Context, environment string, filename string) error {
 	filters := buildParameterFilters(envSecType_File, vc, environment)
 	filters = append(filters, types.ParameterStringFilter{
 		Key:    aws.String("tag:filename"),
@@ -317,7 +317,7 @@ func (s *EnvStore) DeleteSecretFile(vc viewer.Context, environment api.Environme
 	return nil
 }
 
-func buildParameterFilters(secretKind envSecType, vc viewer.Context, environment api.Environment) []types.
+func buildParameterFilters(secretKind envSecType, vc viewer.Context, environment string) []types.
 	ParameterStringFilter {
 	filters := []types.ParameterStringFilter{{
 		Key:    aws.String("tag:kind"),
@@ -334,10 +334,10 @@ func buildParameterFilters(secretKind envSecType, vc viewer.Context, environment
 			Values: []string{vc.Email()},
 		})
 	}
-	if environment != api.Environment_NONE {
+	if environment != "" {
 		filters = append(filters, types.ParameterStringFilter{
 			Key:    aws.String("tag:environment"),
-			Values: []string{environment.String()},
+			Values: []string{environment},
 		})
 	}
 	return filters
@@ -356,7 +356,7 @@ func buildParameterTags(secretKind envSecType, secretTags map[string]string) []t
 	return parameterTags
 }
 
-func buildSecretTags(vc viewer.Context, environment api.Environment) (map[string]string, error) {
+func buildSecretTags(vc viewer.Context, environment string) (map[string]string, error) {
 	var tags map[string]string
 	if vc.OrgDomain() != "" {
 		tags = map[string]string{
@@ -369,8 +369,8 @@ func buildSecretTags(vc viewer.Context, environment api.Environment) (map[string
 		}
 	}
 
-	if environment != api.Environment_NONE {
-		tags["environment"] = environment.String()
+	if environment != "" {
+		tags["environment"] = environment
 	}
 	return tags, nil
 }
