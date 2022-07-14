@@ -1,53 +1,50 @@
 package envsec
 
 import (
+	"context"
+	"fmt"
 	"path"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
-	"go.jetpack.io/axiom/opensource/cmd/jetpack/viewer"
-	"go.jetpack.io/axiom/opensource/kubevalidate"
 )
 
 type EnvStore struct {
 	store *parameterStore
+	org   string // Temporary until we key by project instead.
 }
 
-func NewEnvStore(vc viewer.Context, config *ParameterStoreConfig) (*EnvStore, error) {
-	var p string
-	if vc.OrgDomain() != "" {
-		domain, err := kubevalidate.ToValidName(vc.OrgDomain())
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-
-		p = path.Join("/jetpack.io/secrets", domain)
-	} else {
-		email, err := kubevalidate.ToValidName(vc.Email())
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-
-		p = path.Join("/jetpack.io/secrets", email)
-	}
-
+func NewEnvStore(org string, config *ParameterStoreConfig) (*EnvStore, error) {
+	// TODO: validate org
+	// Org is temporary anyways, since we'll start keying by project id instead.
+	p := path.Join("/jetpack.io/secrets", normalizeOrg(org))
+	fmt.Printf("Path: %s\n", p)
 	paramStore, err := newParameterStore(config, p)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	store := &EnvStore{
 		store: paramStore,
+		org:   org,
 	}
 	return store, nil
 }
 
-func (s *EnvStore) List(vc viewer.Context, environment string) (map[string]string, error) {
-	filters := buildParameterFilters(vc, environment)
+// Temporary function, remove once we switch to project id.
+func normalizeOrg(org string) string {
+	s := strings.ToLower(org)
+	s = strings.ReplaceAll(s, ".", "-")
+	return s
+}
 
-	parameters, err := s.store.listParameters(vc, filters)
+func (s *EnvStore) List(ctx context.Context, environment string) (map[string]string, error) {
+	filters := buildParameterFilters(s.org, environment)
+
+	parameters, err := s.store.listParameters(ctx, filters)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -60,7 +57,7 @@ func (s *EnvStore) List(vc viewer.Context, environment string) (map[string]strin
 	paramChunks := lo.Chunk(parameters, 10)
 	valueChunks := []map[string]string{}
 	for _, paramChunk := range paramChunks {
-		values, err := s.store.loadParametersValues(vc, paramChunk)
+		values, err := s.store.loadParametersValues(ctx, paramChunk)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -83,26 +80,23 @@ func (s *EnvStore) List(vc viewer.Context, environment string) (map[string]strin
 
 // Stores or updates an env-var
 func (s *EnvStore) Set(
-	vc viewer.Context,
+	ctx context.Context,
 	environment string,
 	projectID string,
 	name string,
 	value string,
 ) error {
-	secretTags, err := buildSecretTags(vc, environment)
-	if err != nil {
-		return errors.WithStack(err)
-	}
+	secretTags := buildSecretTags(s.org, environment)
 	// appending project ID tag to secret tags
 	secretTags["ProjectID"] = projectID
 
-	filters := buildParameterFilters(vc, environment)
+	filters := buildParameterFilters(s.org, environment)
 	filters = append(filters, types.ParameterStringFilter{
 		Key:    aws.String("tag:name"),
 		Values: []string{name},
 	})
 
-	parameters, err := s.store.listParameters(vc, filters)
+	parameters, err := s.store.listParameters(ctx, filters)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -117,13 +111,13 @@ func (s *EnvStore) Set(
 		parameter := &parameter{
 			tags: tags,
 		}
-		return s.store.newParameter(vc, parameter, value)
+		return s.store.newParameter(ctx, parameter, value)
 	}
 
 	if len(parameters) == 1 {
 		// Parameter with the same name is already defined
 		parameter := parameters[0]
-		return s.store.storeParameterValue(vc, parameter, value)
+		return s.store.storeParameterValue(ctx, parameter, value)
 	}
 
 	// Internal error: duplicate ambiguous definitions
@@ -131,26 +125,26 @@ func (s *EnvStore) Set(
 }
 
 // Deletes stored environment
-func (s *EnvStore) Delete(vc viewer.Context, environment string, names []string) error {
-	filters := buildParameterFilters(vc, environment)
+func (s *EnvStore) Delete(ctx context.Context, environment string, names []string) error {
+	filters := buildParameterFilters(s.org, environment)
 	filters = append(filters, types.ParameterStringFilter{
 		Key:    aws.String("tag:name"),
 		Values: names,
 	})
 
-	parameters, err := s.store.listParameters(vc, filters)
+	parameters, err := s.store.listParameters(ctx, filters)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	if 0 == len(parameters) {
+	if len(parameters) == 0 {
 		// early return, we are done
 		return nil
 	}
 
 	paramChunks := lo.Chunk(parameters, 10)
 	for _, paramChunk := range paramChunks {
-		err = s.store.deleteParameters(vc, paramChunk)
+		err = s.store.deleteParameters(ctx, paramChunk)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -159,18 +153,12 @@ func (s *EnvStore) Delete(vc viewer.Context, environment string, names []string)
 	return nil
 }
 
-func buildParameterFilters(vc viewer.Context, environment string) []types.ParameterStringFilter {
-
+func buildParameterFilters(org string, environment string) []types.ParameterStringFilter {
 	filters := []types.ParameterStringFilter{}
-	if vc.OrgDomain() != "" {
+	if org != "" {
 		filters = append(filters, types.ParameterStringFilter{
 			Key:    aws.String("tag:org"),
-			Values: []string{vc.OrgDomain()},
-		})
-	} else {
-		filters = append(filters, types.ParameterStringFilter{
-			Key:    aws.String("tag:email"),
-			Values: []string{vc.Email()},
+			Values: []string{org},
 		})
 	}
 	if environment != "" {
@@ -192,21 +180,13 @@ func buildParameterTags(secretTags map[string]string) []types.Tag {
 	return parameterTags
 }
 
-func buildSecretTags(vc viewer.Context, environment string) (map[string]string, error) {
-	var tags map[string]string
-	if vc.OrgDomain() != "" {
-		tags = map[string]string{
-			"org":   vc.OrgDomain(),
-			"email": vc.Email(),
-		}
-	} else {
-		tags = map[string]string{
-			"email": vc.Email(),
-		}
+func buildSecretTags(org string, environment string) map[string]string {
+	tags := map[string]string{}
+	if org != "" {
+		tags["org"] = org
 	}
-
 	if environment != "" {
 		tags["environment"] = environment
 	}
-	return tags, nil
+	return tags
 }

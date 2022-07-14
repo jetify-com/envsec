@@ -9,8 +9,6 @@ go_library(
     importpath = "go.jetpack.io/axiom/opensource/envsec",
     visibility = ["//visibility:public"],
     deps = [
-        "//opensource/cmd/jetpack/viewer",
-        "//opensource/kubevalidate",
         "@com_github_aws_aws_sdk_go_v2//aws",
         "@com_github_aws_aws_sdk_go_v2_config//:config",
         "@com_github_aws_aws_sdk_go_v2_credentials//:credentials",
