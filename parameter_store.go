@@ -176,6 +176,13 @@ func (s *parameterStore) describeParameters(ctx context.Context, additionalFilte
 			Key:    aws.String("Type"),
 			Values: []string{"SecureString"},
 		},
+		{
+			Key:    aws.String("Path"),
+			Option: aws.String("Recursive"),
+			// TODO: should this path be scoped to the project? or to the env namespace in general?
+			// For now we restrict to the org, but that needs to change once we switch to project id.
+			Values: []string{s.path},
+		},
 	}
 	filters = append(filters, additionalFilters...)
 
