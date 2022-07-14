@@ -143,9 +143,19 @@ func (s *EnvStore) Delete(vc viewer.Context, environment string, names []string)
 		return errors.WithStack(err)
 	}
 
-	if 0 < len(parameters) {
-		return s.store.deleteParameters(vc, parameters)
+	if 0 == len(parameters) {
+		// early return, we are done
+		return nil
 	}
+
+	paramChunks := lo.Chunk(parameters, 10)
+	for _, paramChunk := range paramChunks {
+		err = s.store.deleteParameters(vc, paramChunk)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
 	return nil
 }
 
