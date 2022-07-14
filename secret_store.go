@@ -12,12 +12,6 @@ import (
 	"go.jetpack.io/axiom/opensource/kubevalidate"
 )
 
-type envSecType string
-
-const (
-	envSecType_EnvVar envSecType = "ENVIRONMENT_VARIABLE"
-)
-
 type EnvStore struct {
 	store *parameterStore
 }
@@ -51,7 +45,7 @@ func NewEnvStore(vc viewer.Context, config *ParameterStoreConfig) (*EnvStore, er
 }
 
 func (s *EnvStore) List(vc viewer.Context, environment string) (map[string]string, error) {
-	filters := buildParameterFilters(envSecType_EnvVar, vc, environment)
+	filters := buildParameterFilters(vc, environment)
 
 	parameters, err := s.store.listParameters(vc, filters)
 	if err != nil {
@@ -102,7 +96,7 @@ func (s *EnvStore) Set(
 	// appending project ID tag to secret tags
 	secretTags["ProjectID"] = projectID
 
-	filters := buildParameterFilters(envSecType_EnvVar, vc, environment)
+	filters := buildParameterFilters(vc, environment)
 	filters = append(filters, types.ParameterStringFilter{
 		Key:    aws.String("tag:name"),
 		Values: []string{name},
@@ -114,7 +108,7 @@ func (s *EnvStore) Set(
 	}
 
 	if len(parameters) == 0 {
-		tags := buildParameterTags(envSecType_EnvVar, secretTags)
+		tags := buildParameterTags(secretTags)
 		tags = append(tags, types.Tag{
 			Key: aws.String("name"), Value: aws.String(name),
 		})
@@ -138,7 +132,7 @@ func (s *EnvStore) Set(
 
 // Deletes stored environment
 func (s *EnvStore) Delete(vc viewer.Context, environment string, names []string) error {
-	filters := buildParameterFilters(envSecType_EnvVar, vc, environment)
+	filters := buildParameterFilters(vc, environment)
 	filters = append(filters, types.ParameterStringFilter{
 		Key:    aws.String("tag:name"),
 		Values: names,
@@ -155,12 +149,9 @@ func (s *EnvStore) Delete(vc viewer.Context, environment string, names []string)
 	return nil
 }
 
-func buildParameterFilters(kind envSecType, vc viewer.Context, environment string) []types.ParameterStringFilter {
+func buildParameterFilters(vc viewer.Context, environment string) []types.ParameterStringFilter {
 
-	filters := []types.ParameterStringFilter{{
-		Key:    aws.String("tag:kind"),
-		Values: []string{string(kind)},
-	}}
+	filters := []types.ParameterStringFilter{}
 	if vc.OrgDomain() != "" {
 		filters = append(filters, types.ParameterStringFilter{
 			Key:    aws.String("tag:org"),
@@ -181,16 +172,13 @@ func buildParameterFilters(kind envSecType, vc viewer.Context, environment strin
 	return filters
 }
 
-func buildParameterTags(kind envSecType, secretTags map[string]string) []types.Tag {
+func buildParameterTags(secretTags map[string]string) []types.Tag {
 	var parameterTags []types.Tag
 	for tag, value := range secretTags {
 		parameterTags = append(parameterTags, types.Tag{
 			Key: aws.String(tag), Value: aws.String(value),
 		})
 	}
-	parameterTags = append(parameterTags, types.Tag{
-		Key: aws.String("kind"), Value: aws.String(string(kind)),
-	})
 	return parameterTags
 }
 
