@@ -8,10 +8,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/samber/lo"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/pkg/errors"
 )
 
@@ -24,13 +24,13 @@ type parameter struct {
 
 func (p *parameter) resolveParameterTag(tag string) (string, bool) {
 	parameterTag, defined := lo.Find(p.tags, func(t types.Tag) bool {
-		return aws.StringValue(t.Key) == tag
+		return aws.ToString(t.Key) == tag
 	})
 
 	if !defined {
 		return "", false
 	}
-	return aws.StringValue(parameterTag.Value), true
+	return aws.ToString(parameterTag.Value), true
 }
 
 type ParameterStoreConfig struct {
@@ -44,6 +44,7 @@ type ParameterStoreConfig struct {
 type parameterStore struct {
 	config *ParameterStoreConfig
 	path   string
+	client *ssm.Client
 }
 
 // Parameter values are limited in size to 4KB
@@ -54,19 +55,17 @@ func newParameterStore(config *ParameterStoreConfig, path string) *parameterStor
 	return &parameterStore{
 		config: config,
 		path:   path,
+		client: newSsmClient(config),
 	}
 }
 
 // Returns information about stored parameters.
 func (s *parameterStore) listParameters(ctx context.Context, filters []types.ParameterStringFilter) ([]*parameter, error) {
-	client := s.newSsmClient()
-	return s.describeParameters(ctx, client, filters...)
+	return s.describeParameters(ctx, filters...)
 }
 
 // Returns values associated with a set of parameters
 func (s *parameterStore) loadParametersValues(ctx context.Context, parameters []*parameter) (map[string]string, error) {
-	client := s.newSsmClient()
-
 	if len(parameters) == 0 {
 		return map[string]string{}, nil
 	}
@@ -77,7 +76,7 @@ func (s *parameterStore) loadParametersValues(ctx context.Context, parameters []
 	}
 
 	// Retrieve stored parameters values
-	output, err := client.GetParameters(ctx, &ssm.GetParametersInput{
+	output, err := s.client.GetParameters(ctx, &ssm.GetParametersInput{
 		Names:          paths,
 		WithDecryption: true,
 	})
@@ -91,7 +90,7 @@ func (s *parameterStore) loadParametersValues(ctx context.Context, parameters []
 
 	values := map[string]string{}
 	for _, p := range output.Parameters {
-		values[aws.StringValue(p.Name)] = aws.StringValue(p.Value)
+		values[aws.ToString(p.Name)] = aws.ToString(p.Value)
 	}
 	return values, nil
 }
@@ -101,8 +100,6 @@ func (s *parameterStore) newParameter(ctx context.Context, v *parameter, value s
 	if parameterValueMaxLength < len(value) {
 		return errors.New("parameter values are limited in size to 4KB")
 	}
-
-	client := s.newSsmClient()
 
 	id, err := generateParameterId(s.path)
 	if err != nil {
@@ -118,7 +115,7 @@ func (s *parameterStore) newParameter(ctx context.Context, v *parameter, value s
 		Tags:        v.tags,
 	}
 
-	_, err = client.PutParameter(ctx, input)
+	_, err = s.client.PutParameter(ctx, input)
 	return errors.WithStack(err)
 }
 
@@ -129,8 +126,6 @@ func (s *parameterStore) storeParameterValue(ctx context.Context, v *parameter, 
 		return errors.New("parameter values are limited in size to 4KB")
 	}
 
-	client := s.newSsmClient()
-
 	input := &ssm.PutParameterInput{
 		Name:        aws.String(v.id),
 		Description: aws.String(v.description),
@@ -138,14 +133,12 @@ func (s *parameterStore) storeParameterValue(ctx context.Context, v *parameter, 
 		Value:       aws.String(value),
 	}
 
-	_, err := client.PutParameter(ctx, input)
+	_, err := s.client.PutParameter(ctx, input)
 	return errors.WithStack(err)
 }
 
 // Delete a stored parameter from the system.
 func (s *parameterStore) deleteParameters(ctx context.Context, parameters []*parameter) error {
-	client := s.newSsmClient()
-
 	var paths []string
 	for _, p := range parameters {
 		paths = append(paths, p.id)
@@ -154,24 +147,24 @@ func (s *parameterStore) deleteParameters(ctx context.Context, parameters []*par
 	input := &ssm.DeleteParametersInput{
 		Names: paths,
 	}
-	_, err := client.DeleteParameters(ctx, input)
+	_, err := s.client.DeleteParameters(ctx, input)
 	return errors.WithStack(err)
 }
 
-func (s *parameterStore) newSsmClient() *ssm.Client {
+func newSsmClient(config *ParameterStoreConfig) *ssm.Client {
 	return ssm.New(
 		ssm.Options{
-			Region: s.config.Region,
+			Region: config.Region,
 			Credentials: credentials.NewStaticCredentialsProvider(
-				s.config.AccessKeyId,
-				s.config.SecretAccessKey,
-				s.config.SessionToken,
+				config.AccessKeyId,
+				config.SecretAccessKey,
+				config.SessionToken,
 			),
 		},
 	)
 }
 
-func (s *parameterStore) describeParameters(ctx context.Context, client *ssm.Client, additionalFilters ...types.ParameterStringFilter) ([]*parameter, error) {
+func (s *parameterStore) describeParameters(ctx context.Context, additionalFilters ...types.ParameterStringFilter) ([]*parameter, error) {
 	filters := []types.ParameterStringFilter{
 		{
 			Key:    aws.String("Type"),
@@ -181,14 +174,14 @@ func (s *parameterStore) describeParameters(ctx context.Context, client *ssm.Cli
 	filters = append(filters, additionalFilters...)
 
 	var parameters []*parameter
-	result, nextToken, err := s.executeDescribeParametersRequest(ctx, client, filters, nil)
+	result, nextToken, err := s.executeDescribeParametersRequest(ctx, filters, nil)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	parameters = append(parameters, result...)
 
-	for aws.StringValue(nextToken) != "" {
-		result, nextToken, err = s.executeDescribeParametersRequest(ctx, client, filters, nextToken)
+	for aws.ToString(nextToken) != "" {
+		result, nextToken, err = s.executeDescribeParametersRequest(ctx, filters, nextToken)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -198,8 +191,8 @@ func (s *parameterStore) describeParameters(ctx context.Context, client *ssm.Cli
 	return parameters, nil
 }
 
-func (s *parameterStore) executeDescribeParametersRequest(ctx context.Context, client *ssm.Client, filters []types.ParameterStringFilter, nextToken *string) ([]*parameter, *string, error) {
-	output, err := client.DescribeParameters(ctx, &ssm.DescribeParametersInput{
+func (s *parameterStore) executeDescribeParametersRequest(ctx context.Context, filters []types.ParameterStringFilter, nextToken *string) ([]*parameter, *string, error) {
+	output, err := s.client.DescribeParameters(ctx, &ssm.DescribeParametersInput{
 		ParameterFilters: filters,
 		NextToken:        nextToken,
 	})
@@ -213,14 +206,14 @@ func (s *parameterStore) executeDescribeParametersRequest(ctx context.Context, c
 			ResourceId:   p.Name,
 			ResourceType: types.ResourceTypeForTaggingParameter,
 		}
-		tags, err := client.ListTagsForResource(ctx, listTagsInput)
+		tags, err := s.client.ListTagsForResource(ctx, listTagsInput)
 		if err != nil {
 			return nil, nil, errors.Wrapf(err, "error executing AWS SSM query [ListTagsForResource '%v']", p.Name)
 		}
 
 		parameters = append(parameters, &parameter{
-			id:           aws.StringValue(p.Name),
-			description:  aws.StringValue(p.Description),
+			id:           aws.ToString(p.Name),
+			description:  aws.ToString(p.Description),
 			lastModified: p.LastModifiedDate,
 			tags:         tags.TagList,
 		})
