@@ -5,14 +5,14 @@ import (
 	"path"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/samber/lo"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 )
 
 type parameter struct {
@@ -51,12 +51,31 @@ type parameterStore struct {
 const parameterValueMaxLength = 4 * 1024
 
 // New parameter store for current user/organization.
-func newParameterStore(config *ParameterStoreConfig, path string) *parameterStore {
+func newParameterStore(config *ParameterStoreConfig, path string) (*parameterStore, error) {
+	awsConfig, err := awsconfig.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	client := ssm.NewFromConfig(awsConfig, func(o *ssm.Options) {
+		if config.Region != "" {
+			o.Region = config.Region
+		}
+
+		if (config.AccessKeyId != "" && config.SecretAccessKey != "") || config.SessionToken != "" {
+			o.Credentials = credentials.NewStaticCredentialsProvider(
+				config.AccessKeyId,
+				config.SecretAccessKey,
+				config.SessionToken,
+			)
+		}
+	})
+
 	return &parameterStore{
 		config: config,
 		path:   path,
-		client: newSsmClient(config),
-	}
+		client: client,
+	}, nil /* no error */
 }
 
 // Returns information about stored parameters.
@@ -149,19 +168,6 @@ func (s *parameterStore) deleteParameters(ctx context.Context, parameters []*par
 	}
 	_, err := s.client.DeleteParameters(ctx, input)
 	return errors.WithStack(err)
-}
-
-func newSsmClient(config *ParameterStoreConfig) *ssm.Client {
-	return ssm.New(
-		ssm.Options{
-			Region: config.Region,
-			Credentials: credentials.NewStaticCredentialsProvider(
-				config.AccessKeyId,
-				config.SecretAccessKey,
-				config.SessionToken,
-			),
-		},
-	)
 }
 
 func (s *parameterStore) describeParameters(ctx context.Context, additionalFilters ...types.ParameterStringFilter) ([]*parameter, error) {

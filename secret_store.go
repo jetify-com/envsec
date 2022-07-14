@@ -40,8 +40,12 @@ func NewEnvStore(vc viewer.Context, config *ParameterStoreConfig) (*EnvStore, er
 		p = path.Join("/jetpack.io/secrets", email)
 	}
 
+	paramStore, err := newParameterStore(config, p)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 	store := &EnvStore{
-		store: newParameterStore(config, p),
+		store: paramStore,
 	}
 	return store, nil
 }
