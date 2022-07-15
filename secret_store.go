@@ -13,6 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 )
 
+// This dummy project id is temporary until the project ID in jetconfig.yaml
+// comes out from behind feature gate.
+const DUMMY_PROJECT_ID = "proj_00000000"
+
 type EnvStore struct {
 	store *parameterStore
 	org   string // Temporary until we key by project instead.
@@ -41,8 +45,8 @@ func normalizeOrg(org string) string {
 	return s
 }
 
-func (s *EnvStore) List(ctx context.Context, environment string) (map[string]string, error) {
-	filters := buildParameterFilters(s.org, environment)
+func (s *EnvStore) List(ctx context.Context, environment string, projectId string) (map[string]string, error) {
+	filters := buildParameterFilters(s.org, environment, projectId)
 
 	parameters, err := s.store.listParameters(ctx, filters)
 	if err != nil {
@@ -82,15 +86,15 @@ func (s *EnvStore) List(ctx context.Context, environment string) (map[string]str
 func (s *EnvStore) Set(
 	ctx context.Context,
 	environment string,
-	projectID string,
+	projectId string,
 	name string,
 	value string,
 ) error {
 	secretTags := buildSecretTags(s.org, environment)
 	// appending project ID tag to secret tags
-	secretTags["ProjectID"] = projectID
+	secretTags["projectId"] = projectId
 
-	filters := buildParameterFilters(s.org, environment)
+	filters := buildParameterFilters(s.org, environment, projectId)
 	filters = append(filters, types.ParameterStringFilter{
 		Key:    aws.String("tag:name"),
 		Values: []string{name},
@@ -125,8 +129,8 @@ func (s *EnvStore) Set(
 }
 
 // Deletes stored environment
-func (s *EnvStore) Delete(ctx context.Context, environment string, names []string) error {
-	filters := buildParameterFilters(s.org, environment)
+func (s *EnvStore) Delete(ctx context.Context, environment string, projectId string, names []string) error {
+	filters := buildParameterFilters(s.org, environment, projectId)
 	filters = append(filters, types.ParameterStringFilter{
 		Key:    aws.String("tag:name"),
 		Values: names,
@@ -153,7 +157,7 @@ func (s *EnvStore) Delete(ctx context.Context, environment string, names []strin
 	return nil
 }
 
-func buildParameterFilters(org string, environment string) []types.ParameterStringFilter {
+func buildParameterFilters(org string, environment string, projectId string) []types.ParameterStringFilter {
 	filters := []types.ParameterStringFilter{}
 	if org != "" {
 		filters = append(filters, types.ParameterStringFilter{
@@ -166,6 +170,15 @@ func buildParameterFilters(org string, environment string) []types.ParameterStri
 			Key:    aws.String("tag:environment"),
 			Values: []string{environment},
 		})
+	}
+
+	if projectId != DUMMY_PROJECT_ID {
+		filters = append(
+			filters, types.ParameterStringFilter{
+				Key:    aws.String("tag:projectId"),
+				Values: []string{projectId},
+			},
+		)
 	}
 	return filters
 }
