@@ -1,5 +1,7 @@
 package envsec
 
+import "context"
+
 // Uniquely identifies an environment in which we store environment variables.
 type EnvId struct {
 	// A string that uniquely identifies the project to which the environment belongs.
@@ -11,13 +13,13 @@ type EnvId struct {
 
 type Store interface {
 	// List all environmnent variables and their values associated with the given envId.
-	List(envId EnvId) (map[string]string, error)
+	List(ctx context.Context, envId EnvId) (map[string]string, error)
 	// Set the value of an environment variable.
-	Set(envId EnvId, name string, value string) error
+	Set(ctx context.Context, envId EnvId, name string, value string) error
 	// Set the values of multiple environment variables.
-	SetAll(envId EnvId, values map[string]string) error
+	SetAll(ctx context.Context, envId EnvId, values map[string]string) error
 	// Delete an environment variable.
-	Delete(envId EnvId, name string) error
+	Delete(ctx context.Context, envId EnvId, name string) error
 	// Delete multiple environment variables.
-	DeleteAll(envId EnvId, names []string) error
+	DeleteAll(ctx context.Context, envId EnvId, names []string) error
 }

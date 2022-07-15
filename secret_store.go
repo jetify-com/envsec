@@ -2,11 +2,11 @@ package envsec
 
 import (
 	"context"
-	"fmt"
 	"path"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 
@@ -22,11 +22,13 @@ type EnvStore struct {
 	org   string // Temporary until we key by project instead.
 }
 
+// EnvStore implements interface Store (compile-time check)
+var _ Store = (*EnvStore)(nil)
+
 func NewEnvStore(org string, config *ParameterStoreConfig) (*EnvStore, error) {
 	// TODO: validate org
 	// Org is temporary anyways, since we'll start keying by project id instead.
 	p := path.Join("/jetpack.io/secrets", normalizeOrg(org))
-	fmt.Printf("Path: %s\n", p)
 	paramStore, err := newParameterStore(config, p)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -45,8 +47,8 @@ func normalizeOrg(org string) string {
 	return s
 }
 
-func (s *EnvStore) List(ctx context.Context, environment string, projectId string) (map[string]string, error) {
-	filters := buildParameterFilters(s.org, environment, projectId)
+func (s *EnvStore) List(ctx context.Context, envId EnvId) (map[string]string, error) {
+	filters := buildParameterFilters(s.org, envId)
 
 	parameters, err := s.store.listParameters(ctx, filters)
 	if err != nil {
@@ -85,16 +87,15 @@ func (s *EnvStore) List(ctx context.Context, environment string, projectId strin
 // Stores or updates an env-var
 func (s *EnvStore) Set(
 	ctx context.Context,
-	environment string,
-	projectId string,
+	envId EnvId,
 	name string,
 	value string,
 ) error {
-	secretTags := buildSecretTags(s.org, environment)
+	secretTags := buildSecretTags(s.org, envId.EnvName)
 	// appending project ID tag to secret tags
-	secretTags["project-id"] = projectId
+	secretTags["project-id"] = envId.ProjectId
 
-	filters := buildParameterFilters(s.org, environment, projectId)
+	filters := buildParameterFilters(s.org, envId)
 	filters = append(filters, types.ParameterStringFilter{
 		Key:    aws.String("tag:name"),
 		Values: []string{name},
@@ -128,9 +129,27 @@ func (s *EnvStore) Set(
 	return errors.WithStack(errors.Errorf("duplicate definitions for environment variable %s", name))
 }
 
-// Deletes stored environment
-func (s *EnvStore) Delete(ctx context.Context, environment string, projectId string, names []string) error {
-	filters := buildParameterFilters(s.org, environment, projectId)
+func (s *EnvStore) SetAll(ctx context.Context, envId EnvId, values map[string]string) error {
+	// For now we implement by issuing multiple calls to Set()
+	// Make more efficient either by implementing a batch call to the underlying API, or
+	// by concurrently calling Set()
+
+	var multiErr error
+	for name, value := range values {
+		err := s.Set(ctx, envId, name, value)
+		if err != nil {
+			multiErr = multierror.Append(multiErr, err)
+		}
+	}
+	return multiErr
+}
+
+func (s *EnvStore) Delete(ctx context.Context, envId EnvId, name string) error {
+	return s.DeleteAll(ctx, envId, []string{name})
+}
+
+func (s *EnvStore) DeleteAll(ctx context.Context, envId EnvId, names []string) error {
+	filters := buildParameterFilters(s.org, envId)
 	filters = append(filters, types.ParameterStringFilter{
 		Key:    aws.String("tag:name"),
 		Values: names,
@@ -157,7 +176,7 @@ func (s *EnvStore) Delete(ctx context.Context, environment string, projectId str
 	return nil
 }
 
-func buildParameterFilters(org string, environment string, projectId string) []types.ParameterStringFilter {
+func buildParameterFilters(org string, envId EnvId) []types.ParameterStringFilter {
 	filters := []types.ParameterStringFilter{}
 	if org != "" {
 		filters = append(filters, types.ParameterStringFilter{
@@ -165,18 +184,18 @@ func buildParameterFilters(org string, environment string, projectId string) []t
 			Values: []string{org},
 		})
 	}
-	if environment != "" {
+	if envId.EnvName != "" {
 		filters = append(filters, types.ParameterStringFilter{
-			Key:    aws.String("tag:environment"),
-			Values: []string{environment},
+			Key:    aws.String("tag:environment"), // TODO: rename to envName
+			Values: []string{envId.EnvName},
 		})
 	}
 
-	if projectId != DUMMY_PROJECT_ID {
+	if envId.ProjectId != DUMMY_PROJECT_ID {
 		filters = append(
 			filters, types.ParameterStringFilter{
 				Key:    aws.String("tag:project-id"),
-				Values: []string{projectId},
+				Values: []string{envId.ProjectId},
 			},
 		)
 	}
