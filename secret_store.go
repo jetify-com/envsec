@@ -92,7 +92,7 @@ func (s *EnvStore) Set(
 ) error {
 	secretTags := buildSecretTags(s.org, environment)
 	// appending project ID tag to secret tags
-	secretTags["projectId"] = projectId
+	secretTags["project-id"] = projectId
 
 	filters := buildParameterFilters(s.org, environment, projectId)
 	filters = append(filters, types.ParameterStringFilter{
@@ -175,7 +175,7 @@ func buildParameterFilters(org string, environment string, projectId string) []t
 	if projectId != DUMMY_PROJECT_ID {
 		filters = append(
 			filters, types.ParameterStringFilter{
-				Key:    aws.String("tag:projectId"),
+				Key:    aws.String("tag:project-id"),
 				Values: []string{projectId},
 			},
 		)
