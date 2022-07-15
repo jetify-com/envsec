@@ -1,5 +1,7 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
+# gazelle:prefix go.jetpack.io/envsec
+
 go_library(
     name = "envsec",
     srcs = [
@@ -8,7 +10,7 @@ go_library(
         "secret_store.go",
         "util.go",
     ],
-    importpath = "go.jetpack.io/axiom/opensource/envsec",
+    importpath = "go.jetpack.io/envsec",
     visibility = ["//visibility:public"],
     deps = [
         "@com_github_aws_aws_sdk_go_v2//aws",
