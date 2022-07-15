@@ -1,6 +1,10 @@
 package envsec
 
-import "context"
+import (
+	"context"
+
+	"github.com/pkg/errors"
+)
 
 // Uniquely identifies an environment in which we store environment variables.
 type EnvId struct {
@@ -22,4 +26,33 @@ type Store interface {
 	Delete(ctx context.Context, envId EnvId, name string) error
 	// Delete multiple environment variables.
 	DeleteAll(ctx context.Context, envId EnvId, names []string) error
+}
+
+func NewStore(config Config) (Store, error) {
+	switch config.(type) {
+	case *SSMConfig:
+		// Remove org argument when fully transitioned to projects
+		return newSSMStore("jetpack-io", config.(*SSMConfig))
+	default:
+		return nil, errors.Errorf("unsupported store type: %T", config)
+	}
+}
+
+type Config interface {
+	IsEnvStoreConfig() bool
+}
+
+type SSMConfig struct {
+	Region          string
+	AccessKeyId     string
+	SecretAccessKey string
+	SessionToken    string
+	KmsKeyId        string
+}
+
+// SSMStore implements interface Config (compile-time check)
+var _ Config = (*SSMConfig)(nil)
+
+func (c *SSMConfig) IsEnvStoreConfig() bool {
+	return true
 }

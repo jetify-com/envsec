@@ -17,15 +17,15 @@ import (
 // comes out from behind feature gate.
 const DUMMY_PROJECT_ID = "proj_00000000"
 
-type EnvStore struct {
+type SSMStore struct {
 	store *parameterStore
 	org   string // Temporary until we key by project instead.
 }
 
 // EnvStore implements interface Store (compile-time check)
-var _ Store = (*EnvStore)(nil)
+var _ Store = (*SSMStore)(nil)
 
-func NewEnvStore(org string, config *ParameterStoreConfig) (*EnvStore, error) {
+func newSSMStore(org string, config *SSMConfig) (*SSMStore, error) {
 	// TODO: validate org
 	// Org is temporary anyways, since we'll start keying by project id instead.
 	p := path.Join("/jetpack.io/secrets", normalizeOrg(org))
@@ -33,7 +33,7 @@ func NewEnvStore(org string, config *ParameterStoreConfig) (*EnvStore, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	store := &EnvStore{
+	store := &SSMStore{
 		store: paramStore,
 		org:   org,
 	}
@@ -47,7 +47,7 @@ func normalizeOrg(org string) string {
 	return s
 }
 
-func (s *EnvStore) List(ctx context.Context, envId EnvId) (map[string]string, error) {
+func (s *SSMStore) List(ctx context.Context, envId EnvId) (map[string]string, error) {
 	filters := buildParameterFilters(s.org, envId)
 
 	parameters, err := s.store.listParameters(ctx, filters)
@@ -85,7 +85,7 @@ func (s *EnvStore) List(ctx context.Context, envId EnvId) (map[string]string, er
 }
 
 // Stores or updates an env-var
-func (s *EnvStore) Set(
+func (s *SSMStore) Set(
 	ctx context.Context,
 	envId EnvId,
 	name string,
@@ -129,7 +129,7 @@ func (s *EnvStore) Set(
 	return errors.WithStack(errors.Errorf("duplicate definitions for environment variable %s", name))
 }
 
-func (s *EnvStore) SetAll(ctx context.Context, envId EnvId, values map[string]string) error {
+func (s *SSMStore) SetAll(ctx context.Context, envId EnvId, values map[string]string) error {
 	// For now we implement by issuing multiple calls to Set()
 	// Make more efficient either by implementing a batch call to the underlying API, or
 	// by concurrently calling Set()
@@ -144,11 +144,11 @@ func (s *EnvStore) SetAll(ctx context.Context, envId EnvId, values map[string]st
 	return multiErr
 }
 
-func (s *EnvStore) Delete(ctx context.Context, envId EnvId, name string) error {
+func (s *SSMStore) Delete(ctx context.Context, envId EnvId, name string) error {
 	return s.DeleteAll(ctx, envId, []string{name})
 }
 
-func (s *EnvStore) DeleteAll(ctx context.Context, envId EnvId, names []string) error {
+func (s *SSMStore) DeleteAll(ctx context.Context, envId EnvId, names []string) error {
 	filters := buildParameterFilters(s.org, envId)
 	filters = append(filters, types.ParameterStringFilter{
 		Key:    aws.String("tag:name"),

@@ -33,16 +33,8 @@ func (p *parameter) resolveParameterTag(tag string) (string, bool) {
 	return aws.ToString(parameterTag.Value), true
 }
 
-type ParameterStoreConfig struct {
-	Region          string
-	AccessKeyId     string
-	SecretAccessKey string
-	SessionToken    string
-	KmsKeyId        string
-}
-
 type parameterStore struct {
-	config *ParameterStoreConfig
+	config *SSMConfig
 	path   string
 	client *ssm.Client
 }
@@ -51,7 +43,7 @@ type parameterStore struct {
 const parameterValueMaxLength = 4 * 1024
 
 // New parameter store for current user/organization.
-func newParameterStore(config *ParameterStoreConfig, path string) (*parameterStore, error) {
+func newParameterStore(config *SSMConfig, path string) (*parameterStore, error) {
 	awsConfig, err := awsconfig.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		return nil, errors.WithStack(err)
