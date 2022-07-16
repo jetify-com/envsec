@@ -19,23 +19,23 @@ const DUMMY_PROJECT_ID = "proj_00000000"
 
 type SSMStore struct {
 	store *parameterStore
-	org   string // Temporary until we key by project instead.
+	orgID string // Temporary until we key by project instead.
 }
 
 // EnvStore implements interface Store (compile-time check)
 var _ Store = (*SSMStore)(nil)
 
-func newSSMStore(org string, config *SSMConfig) (*SSMStore, error) {
+func newSSMStore(orgID string, config *SSMConfig) (*SSMStore, error) {
 	// TODO: validate org
 	// Org is temporary anyways, since we'll start keying by project id instead.
-	p := path.Join("/jetpack.io/secrets", normalizeOrg(org))
+	p := path.Join("/jetpack.io/secrets", normalizeOrg(orgID))
 	paramStore, err := newParameterStore(config, p)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	store := &SSMStore{
 		store: paramStore,
-		org:   org,
+		orgID: orgID,
 	}
 	return store, nil
 }
@@ -48,7 +48,7 @@ func normalizeOrg(org string) string {
 }
 
 func (s *SSMStore) List(ctx context.Context, envId EnvId) (map[string]string, error) {
-	filters := buildParameterFilters(s.org, envId)
+	filters := buildParameterFilters(s.orgID, envId)
 
 	parameters, err := s.store.listParameters(ctx, filters)
 	if err != nil {
@@ -91,11 +91,11 @@ func (s *SSMStore) Set(
 	name string,
 	value string,
 ) error {
-	secretTags := buildSecretTags(s.org, envId.EnvName)
+	secretTags := buildSecretTags(s.orgID, envId.EnvName)
 	// appending project ID tag to secret tags
 	secretTags["project-id"] = envId.ProjectId
 
-	filters := buildParameterFilters(s.org, envId)
+	filters := buildParameterFilters(s.orgID, envId)
 	filters = append(filters, types.ParameterStringFilter{
 		Key:    aws.String("tag:name"),
 		Values: []string{name},
@@ -149,7 +149,7 @@ func (s *SSMStore) Delete(ctx context.Context, envId EnvId, name string) error {
 }
 
 func (s *SSMStore) DeleteAll(ctx context.Context, envId EnvId, names []string) error {
-	filters := buildParameterFilters(s.org, envId)
+	filters := buildParameterFilters(s.orgID, envId)
 	filters = append(filters, types.ParameterStringFilter{
 		Key:    aws.String("tag:name"),
 		Values: names,
@@ -176,12 +176,12 @@ func (s *SSMStore) DeleteAll(ctx context.Context, envId EnvId, names []string) e
 	return nil
 }
 
-func buildParameterFilters(org string, envId EnvId) []types.ParameterStringFilter {
+func buildParameterFilters(orgID string, envId EnvId) []types.ParameterStringFilter {
 	filters := []types.ParameterStringFilter{}
-	if org != "" {
+	if orgID != "" {
 		filters = append(filters, types.ParameterStringFilter{
-			Key:    aws.String("tag:org"),
-			Values: []string{org},
+			Key:    aws.String("tag:org-id"),
+			Values: []string{orgID},
 		})
 	}
 	if envId.EnvName != "" {
@@ -212,10 +212,10 @@ func buildParameterTags(secretTags map[string]string) []types.Tag {
 	return parameterTags
 }
 
-func buildSecretTags(org string, environment string) map[string]string {
+func buildSecretTags(orgID string, environment string) map[string]string {
 	tags := map[string]string{}
-	if org != "" {
-		tags["org"] = org
+	if orgID != "" {
+		tags["org-id"] = orgID
 	}
 	if environment != "" {
 		tags["environment"] = environment
