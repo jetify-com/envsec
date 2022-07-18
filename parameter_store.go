@@ -41,8 +41,8 @@ type parameterStore struct {
 const parameterValueMaxLength = 4 * 1024
 
 // New parameter store for current user/organization.
-func newParameterStore(config *SSMConfig, path string) (*parameterStore, error) {
-	awsConfig, err := awsconfig.LoadDefaultConfig(context.TODO())
+func newParameterStore(ctx context.Context, config *SSMConfig, path string) (*parameterStore, error) {
+	awsConfig, err := awsconfig.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

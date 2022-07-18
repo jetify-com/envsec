@@ -23,8 +23,8 @@ type SSMStore struct {
 // SSMStore implements interface Store (compile-time check)
 var _ Store = (*SSMStore)(nil)
 
-func newSSMStore(config *SSMConfig) (*SSMStore, error) {
-	paramStore, err := newParameterStore(config, PATH_PREFIX)
+func newSSMStore(ctx context.Context, config *SSMConfig) (*SSMStore, error) {
+	paramStore, err := newParameterStore(ctx, config, PATH_PREFIX)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
