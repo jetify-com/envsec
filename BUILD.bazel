@@ -7,7 +7,7 @@ go_library(
     srcs = [
         "envsec.go",
         "parameter_store.go",
-        "secret_store.go",
+        "ssm_store.go",
         "util.go",
     ],
     importpath = "go.jetpack.io/envsec",
