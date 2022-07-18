@@ -9,5 +9,5 @@ func (e *EnvId) Path() string {
 }
 
 func GetVarPath(envId EnvId, varName string) string {
-	return path.Join(envId.Path(), varName)
+	return path.Join(PATH_PREFIX, envId.Path(), varName)
 }

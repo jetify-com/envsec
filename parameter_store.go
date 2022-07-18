@@ -2,7 +2,6 @@ package envsec
 
 import (
 	"context"
-	"path"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -10,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 )
@@ -107,32 +105,8 @@ func (s *parameterStore) loadParametersValues(ctx context.Context, parameters []
 }
 
 // Defines a new stored parameter.
-func (s *parameterStore) newParameter(ctx context.Context, v *parameter, value string) error {
-	if parameterValueMaxLength < len(value) {
-		return errors.New("parameter values are limited in size to 4KB")
-	}
-
-	id, err := generateParameterId(s.path)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	input := &ssm.PutParameterInput{
-		Name:        id,
-		Description: aws.String(v.description),
-		Type:        types.ParameterTypeSecureString,
-		Value:       aws.String(value),
-		KeyId:       aws.String(s.config.KmsKeyId),
-		Tags:        v.tags,
-	}
-
-	_, err = s.client.PutParameter(ctx, input)
-	return errors.WithStack(err)
-}
-
-// Defines or updates a stored parameter.
 // parameter values are limited in size to 4 KB.
-func (s *parameterStore) storeParameterValue(ctx context.Context, v *parameter, value string) error {
+func (s *parameterStore) newParameter(ctx context.Context, v *parameter, value string) error {
 	if parameterValueMaxLength < len(value) {
 		return errors.New("parameter values are limited in size to 4KB")
 	}
@@ -140,10 +114,33 @@ func (s *parameterStore) storeParameterValue(ctx context.Context, v *parameter, 
 	input := &ssm.PutParameterInput{
 		Name:        aws.String(v.id),
 		Description: aws.String(v.description),
+		Type:        types.ParameterTypeSecureString,
+		Value:       aws.String(value),
+		KeyId:       aws.String(s.config.KmsKeyId),
+		Tags:        v.tags,
+	}
+
+	_, err := s.client.PutParameter(ctx, input)
+	if err != nil {
+		var paeError *types.ParameterAlreadyExists
+		if errors.As(err, &paeError) {
+			// parameter already exists calling put parameter with overwrite flag
+			return s.overwriteParameterValue(ctx, v, value)
+		}
+		return errors.WithStack(err)
+	}
+	return errors.WithStack(err)
+}
+
+// Updates a stored parameter.
+func (s *parameterStore) overwriteParameterValue(ctx context.Context, v *parameter, value string) error {
+
+	input := &ssm.PutParameterInput{
+		Name:        aws.String(v.id),
+		Description: aws.String(v.description),
 		Overwrite:   true,
 		Value:       aws.String(value),
 	}
-
 	_, err := s.client.PutParameter(ctx, input)
 	return errors.WithStack(err)
 }
@@ -224,12 +221,4 @@ func (s *parameterStore) executeDescribeParametersRequest(ctx context.Context, f
 		})
 	}
 	return parameters, output.NextToken, nil
-}
-
-func generateParameterId(p string) (*string, error) {
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return aws.String(path.Join(p, id.String())), nil
 }

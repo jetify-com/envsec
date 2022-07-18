@@ -10,6 +10,8 @@ import (
 type EnvId struct {
 	// A string that uniquely identifies the project to which the environment belongs.
 	ProjectId string
+	// A string that uniquely identifies the organization to which the environment belongs.
+	OrgId string
 	// A name that uniquely identifies the environment within the project.
 	// Usually one of: 'dev', 'prod'.
 	EnvName string
@@ -32,7 +34,7 @@ func NewStore(config Config) (Store, error) {
 	switch config.(type) {
 	case *SSMConfig:
 		// Remove org argument when fully transitioned to projects
-		return newSSMStore("jetpack-io", config.(*SSMConfig))
+		return newSSMStore(config.(*SSMConfig))
 	default:
 		return nil, errors.Errorf("unsupported store type: %T", config)
 	}

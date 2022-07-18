@@ -2,8 +2,6 @@ package envsec
 
 import (
 	"context"
-	"path"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/go-multierror"
@@ -16,39 +14,28 @@ import (
 // This dummy project id is temporary until the project ID in jetconfig.yaml
 // comes out from behind feature gate.
 const DUMMY_PROJECT_ID = "proj_00000000"
+const PATH_PREFIX = "/jetpack-data/env/"
 
 type SSMStore struct {
 	store *parameterStore
-	orgID string // Temporary until we key by project instead.
 }
 
-// EnvStore implements interface Store (compile-time check)
+// SSMStore implements interface Store (compile-time check)
 var _ Store = (*SSMStore)(nil)
 
-func newSSMStore(orgID string, config *SSMConfig) (*SSMStore, error) {
-	// TODO: validate org
-	// Org is temporary anyways, since we'll start keying by project id instead.
-	p := path.Join("/jetpack.io/secrets", normalizeOrg(orgID))
-	paramStore, err := newParameterStore(config, p)
+func newSSMStore(config *SSMConfig) (*SSMStore, error) {
+	paramStore, err := newParameterStore(config, PATH_PREFIX)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	store := &SSMStore{
 		store: paramStore,
-		orgID: orgID,
 	}
 	return store, nil
 }
 
-// Temporary function, remove once we switch to project id.
-func normalizeOrg(org string) string {
-	s := strings.ToLower(org)
-	s = strings.ReplaceAll(s, ".", "-")
-	return s
-}
-
 func (s *SSMStore) List(ctx context.Context, envId EnvId) (map[string]string, error) {
-	filters := buildParameterFilters(s.orgID, envId)
+	filters := buildParameterFilters(envId)
 
 	parameters, err := s.store.listParameters(ctx, filters)
 	if err != nil {
@@ -91,42 +78,19 @@ func (s *SSMStore) Set(
 	name string,
 	value string,
 ) error {
-	secretTags := buildSecretTags(s.orgID, envId.EnvName)
-	// appending project ID tag to secret tags
-	secretTags["project-id"] = envId.ProjectId
+	secretTags := buildSecretTags(envId)
+	parameterKey := GetVarPath(envId, name)
 
-	filters := buildParameterFilters(s.orgID, envId)
-	filters = append(filters, types.ParameterStringFilter{
-		Key:    aws.String("tag:name"),
-		Values: []string{name},
+	// New parameter definition
+	tags := buildParameterTags(secretTags)
+	tags = append(tags, types.Tag{
+		Key: aws.String("name"), Value: aws.String(name),
 	})
-
-	parameters, err := s.store.listParameters(ctx, filters)
-	if err != nil {
-		return errors.WithStack(err)
+	parameter := &parameter{
+		tags: tags,
+		id:   parameterKey,
 	}
-
-	if len(parameters) == 0 {
-		tags := buildParameterTags(secretTags)
-		tags = append(tags, types.Tag{
-			Key: aws.String("name"), Value: aws.String(name),
-		})
-
-		// New parameter definition
-		parameter := &parameter{
-			tags: tags,
-		}
-		return s.store.newParameter(ctx, parameter, value)
-	}
-
-	if len(parameters) == 1 {
-		// Parameter with the same name is already defined
-		parameter := parameters[0]
-		return s.store.storeParameterValue(ctx, parameter, value)
-	}
-
-	// Internal error: duplicate ambiguous definitions
-	return errors.WithStack(errors.Errorf("duplicate definitions for environment variable %s", name))
+	return s.store.newParameter(ctx, parameter, value)
 }
 
 func (s *SSMStore) SetAll(ctx context.Context, envId EnvId, values map[string]string) error {
@@ -149,7 +113,7 @@ func (s *SSMStore) Delete(ctx context.Context, envId EnvId, name string) error {
 }
 
 func (s *SSMStore) DeleteAll(ctx context.Context, envId EnvId, names []string) error {
-	filters := buildParameterFilters(s.orgID, envId)
+	filters := buildParameterFilters(envId)
 	filters = append(filters, types.ParameterStringFilter{
 		Key:    aws.String("tag:name"),
 		Values: names,
@@ -176,17 +140,17 @@ func (s *SSMStore) DeleteAll(ctx context.Context, envId EnvId, names []string) e
 	return nil
 }
 
-func buildParameterFilters(orgID string, envId EnvId) []types.ParameterStringFilter {
+func buildParameterFilters(envId EnvId) []types.ParameterStringFilter {
 	filters := []types.ParameterStringFilter{}
-	if orgID != "" {
+	if envId.OrgId != "" {
 		filters = append(filters, types.ParameterStringFilter{
 			Key:    aws.String("tag:org-id"),
-			Values: []string{orgID},
+			Values: []string{envId.OrgId},
 		})
 	}
 	if envId.EnvName != "" {
 		filters = append(filters, types.ParameterStringFilter{
-			Key:    aws.String("tag:environment"), // TODO: rename to envName
+			Key:    aws.String("tag:env-name"),
 			Values: []string{envId.EnvName},
 		})
 	}
@@ -212,13 +176,15 @@ func buildParameterTags(secretTags map[string]string) []types.Tag {
 	return parameterTags
 }
 
-func buildSecretTags(orgID string, environment string) map[string]string {
+func buildSecretTags(envId EnvId) map[string]string {
 	tags := map[string]string{}
-	if orgID != "" {
-		tags["org-id"] = orgID
+	if envId.OrgId != "" {
+		tags["org-id"] = envId.OrgId
 	}
-	if environment != "" {
-		tags["environment"] = environment
+	if envId.EnvName != "" {
+		tags["env-name"] = envId.EnvName
 	}
+	// appending project ID tag to secret tags
+	tags["project-id"] = envId.ProjectId
 	return tags
 }
