@@ -17,6 +17,17 @@ type EnvId struct {
 	EnvName string
 }
 
+func NewEnvId(projectId string, orgId string, envName string) (EnvId, error) {
+	if projectId == "" {
+		return EnvId{}, errors.New("ProjectId can not be empty")
+	}
+	return EnvId{
+		ProjectId: projectId,
+		OrgId:     orgId,
+		EnvName:   envName,
+	}, nil
+}
+
 type Store interface {
 	// List all environmnent variables and their values associated with the given envId.
 	List(ctx context.Context, envId EnvId) (map[string]string, error)
