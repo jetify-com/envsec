@@ -4,10 +4,12 @@ import (
 	"path"
 )
 
-func (e *EnvId) Path() string {
-	return path.Join(e.ProjectId, e.EnvName)
-}
+const PATH_PREFIX = "/jetpack-data/env"
 
 func GetVarPath(envId EnvId, varName string) string {
-	return path.Join(PATH_PREFIX, envId.Path(), varName)
+	return path.Join(projectPath(envId), envId.EnvName, varName)
+}
+
+func projectPath(envId EnvId) string {
+	return path.Join(PATH_PREFIX, envId.ProjectId)
 }

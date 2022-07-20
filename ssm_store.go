@@ -14,7 +14,6 @@ import (
 // This dummy project id is temporary until the project ID in jetconfig.yaml
 // comes out from behind feature gate.
 const DUMMY_PROJECT_ID = "proj_00000000"
-const PATH_PREFIX = "/jetpack-data/env/"
 
 type SSMStore struct {
 	store *parameterStore
@@ -24,7 +23,7 @@ type SSMStore struct {
 var _ Store = (*SSMStore)(nil)
 
 func newSSMStore(ctx context.Context, config *SSMConfig) (*SSMStore, error) {
-	paramStore, err := newParameterStore(ctx, config, PATH_PREFIX)
+	paramStore, err := newParameterStore(ctx, config)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -35,9 +34,12 @@ func newSSMStore(ctx context.Context, config *SSMConfig) (*SSMStore, error) {
 }
 
 func (s *SSMStore) List(ctx context.Context, envId EnvId) (map[string]string, error) {
+
+	// TODO Reconcile the filters in buildParameterFilters and in listParameters.
+	// Lets unify them in one function.
 	filters := buildParameterFilters(envId)
 
-	parameters, err := s.store.listParameters(ctx, filters)
+	parameters, err := s.store.listParameters(ctx, projectPath(envId), filters)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -50,7 +52,7 @@ func (s *SSMStore) List(ctx context.Context, envId EnvId) (map[string]string, er
 	paramChunks := lo.Chunk(parameters, 10)
 	valueChunks := []map[string]string{}
 	for _, paramChunk := range paramChunks {
-		values, err := s.store.loadParametersValues(ctx, paramChunk)
+		values, err := s.store.loadParametersValues(ctx, projectPath(envId), paramChunk)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -119,7 +121,7 @@ func (s *SSMStore) DeleteAll(ctx context.Context, envId EnvId, names []string) e
 		Values: names,
 	})
 
-	parameters, err := s.store.listParameters(ctx, filters)
+	parameters, err := s.store.listParameters(ctx, projectPath(envId), filters)
 	if err != nil {
 		return errors.WithStack(err)
 	}

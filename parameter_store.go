@@ -33,7 +33,6 @@ func (p *parameter) resolveParameterTag(tag string) (string, bool) {
 
 type parameterStore struct {
 	config *SSMConfig
-	path   string
 	client *ssm.Client
 }
 
@@ -41,7 +40,7 @@ type parameterStore struct {
 const parameterValueMaxLength = 4 * 1024
 
 // New parameter store for current user/organization.
-func newParameterStore(ctx context.Context, config *SSMConfig, path string) (*parameterStore, error) {
+func newParameterStore(ctx context.Context, config *SSMConfig) (*parameterStore, error) {
 	awsConfig, err := awsconfig.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -63,18 +62,16 @@ func newParameterStore(ctx context.Context, config *SSMConfig, path string) (*pa
 
 	return &parameterStore{
 		config: config,
-		path:   path,
 		client: client,
 	}, nil /* no error */
 }
 
-// Returns information about stored parameters.
-func (s *parameterStore) listParameters(ctx context.Context, filters []types.ParameterStringFilter) ([]*parameter, error) {
-	return s.describeParameters(ctx, filters...)
-}
-
 // Returns values associated with a set of parameters
-func (s *parameterStore) loadParametersValues(ctx context.Context, parameters []*parameter) (map[string]string, error) {
+func (s *parameterStore) loadParametersValues(
+	ctx context.Context,
+	pathPrefix string,
+	parameters []*parameter,
+) (map[string]string, error) {
 	if len(parameters) == 0 {
 		return map[string]string{}, nil
 	}
@@ -90,7 +87,8 @@ func (s *parameterStore) loadParametersValues(ctx context.Context, parameters []
 		WithDecryption: true,
 	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "error executing AWS SSM query [path='%v', parameters='%v']", s.path, parameters)
+		return nil, errors.Wrapf(err, "error executing AWS SSM query [path='%v' parameters='%v']", pathPrefix,
+			parameters)
 	}
 
 	if 0 < len(output.InvalidParameters) {
@@ -159,7 +157,12 @@ func (s *parameterStore) deleteParameters(ctx context.Context, parameters []*par
 	return errors.WithStack(err)
 }
 
-func (s *parameterStore) describeParameters(ctx context.Context, additionalFilters ...types.ParameterStringFilter) ([]*parameter, error) {
+// Returns the stored parameters.
+func (s *parameterStore) listParameters(
+	ctx context.Context,
+	path string,
+	additionalFilters []types.ParameterStringFilter,
+) ([]*parameter, error) {
 	filters := []types.ParameterStringFilter{
 		{
 			Key:    aws.String("Type"),
@@ -168,22 +171,20 @@ func (s *parameterStore) describeParameters(ctx context.Context, additionalFilte
 		{
 			Key:    aws.String("Path"),
 			Option: aws.String("Recursive"),
-			// TODO: should this path be scoped to the project? or to the env namespace in general?
-			// For now we restrict to the org, but that needs to change once we switch to project id.
-			Values: []string{s.path},
+			Values: []string{path},
 		},
 	}
 	filters = append(filters, additionalFilters...)
 
 	var parameters []*parameter
-	result, nextToken, err := s.executeDescribeParametersRequest(ctx, filters, nil)
+	result, nextToken, err := s.executeDescribeParametersRequest(ctx, path, filters, nil)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	parameters = append(parameters, result...)
 
 	for aws.ToString(nextToken) != "" {
-		result, nextToken, err = s.executeDescribeParametersRequest(ctx, filters, nextToken)
+		result, nextToken, err = s.executeDescribeParametersRequest(ctx, path, filters, nextToken)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -193,13 +194,19 @@ func (s *parameterStore) describeParameters(ctx context.Context, additionalFilte
 	return parameters, nil
 }
 
-func (s *parameterStore) executeDescribeParametersRequest(ctx context.Context, filters []types.ParameterStringFilter, nextToken *string) ([]*parameter, *string, error) {
+func (s *parameterStore) executeDescribeParametersRequest(
+	ctx context.Context,
+	path string,
+	filters []types.ParameterStringFilter,
+	nextToken *string,
+) ([]*parameter, *string, error) {
+
 	output, err := s.client.DescribeParameters(ctx, &ssm.DescribeParametersInput{
 		ParameterFilters: filters,
 		NextToken:        nextToken,
 	})
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "error executing AWS SSM query [DescribeParameters '%v']", s.path)
+		return nil, nil, errors.Wrapf(err, "error executing AWS SSM query [DescribeParameters '%v']", path)
 	}
 
 	var parameters []*parameter
