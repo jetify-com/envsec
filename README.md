@@ -9,3 +9,4 @@ It comes with a command line tool that you can start using right away, and an ac
 ## Related Work
 + [Chamber](https://github.com/segmentio/chamber)
 + [Credstash](https://github.com/fugue/credstash)
++ [Sops](https://github.com/mozilla/sops)

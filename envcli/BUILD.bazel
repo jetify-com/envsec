@@ -9,6 +9,7 @@ go_library(
         "root.go",
         "set.go",
         "upload.go",
+        "usage.go",
         "util.go",
     ],
     importpath = "go.jetpack.io/envsec/envcli",

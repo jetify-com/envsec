@@ -28,7 +28,9 @@ func EnvCmd() *cobra.Command {
 			return cmd.Help()
 		},
 	}
-	command.AddCommand()
+	cmdConfig := &CmdConfig{}
+	command.AddCommand(ListCmd(cmdConfig))
+	command.SetUsageFunc(UsageFunc)
 	return command
 }
 
