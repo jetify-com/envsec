@@ -16,8 +16,8 @@ func SetCmd(cmdCfg *CmdConfig) *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			for _, arg := range args {
-				parts := strings.Split(arg, "=")
-				if len(parts) < 2 {
+				k, v, ok := strings.Cut(arg, "=")
+				if !ok || k == "" || v == "" {
 					return errors.Errorf(
 						"argument %s must have an '=' to be of the form NAME=VALUE",
 						arg,
@@ -30,8 +30,8 @@ func SetCmd(cmdCfg *CmdConfig) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			envMap := map[string]string{}
 			for _, arg := range args {
-				parts := strings.Split(arg, "=")
-				envMap[parts[0]] = parts[1]
+				k, v, _ := strings.Cut(arg, "=")
+				envMap[k] = v
 			}
 
 			err := SetEnvMap(cmd.Context(), cmdCfg.Store, cmdCfg.EnvId, envMap)
