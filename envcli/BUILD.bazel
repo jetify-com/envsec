@@ -4,6 +4,7 @@ go_library(
     name = "envcli",
     srcs = [
         "download.go",
+        "exec.go",
         "ls.go",
         "rm.go",
         "root.go",
