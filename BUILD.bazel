@@ -21,5 +21,7 @@ go_library(
         "@com_github_hashicorp_go_multierror//:go-multierror",
         "@com_github_pkg_errors//:errors",
         "@com_github_samber_lo//:lo",
+        "@org_golang_x_text//collate",
+        "@org_golang_x_text//language",
     ],
 )

@@ -18,12 +18,12 @@ func DownloadCmd(cmdCfg *CmdConfig) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			orderedEnvVars, err := listEnv(cmd, cmdCfg.Store, cmdCfg.EnvId)
+			envVars, err := cmdCfg.Store.List(cmd.Context(), cmdCfg.EnvId)
 			if err != nil {
 				return errors.WithStack(err)
 			}
 
-			if len(orderedEnvVars) == 0 {
+			if len(envVars) == 0 {
 				err = tux.WriteHeader(cmd.OutOrStdout(),
 					"[DONE] There are no environment variables to download for environment: %s\n",
 					strings.ToLower(cmdCfg.EnvId.EnvName),
@@ -40,9 +40,9 @@ func DownloadCmd(cmdCfg *CmdConfig) *cobra.Command {
 
 			// .env file contents
 			lines := []string{}
-			for _, envVar := range orderedEnvVars {
+			for _, envVar := range envVars {
 				// name=value
-				lines = append(lines, fmt.Sprintf("%s=%s", envVar[0], envVar[1]))
+				lines = append(lines, fmt.Sprintf("%s=%s", envVar.Name, envVar.Value))
 			}
 			contents := strings.Join(lines, "\n")
 

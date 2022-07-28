@@ -23,8 +23,6 @@ go_library(
         "@com_github_pkg_errors//:errors",
         "@com_github_samber_lo//:lo",
         "@com_github_spf13_cobra//:cobra",
-        "@org_golang_x_text//collate",
-        "@org_golang_x_text//language",
     ],
 )
 

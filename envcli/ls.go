@@ -28,18 +28,19 @@ func ListCmd(cmdCfg *CmdConfig) *cobra.Command {
 				envNames = []string{cmdCfg.EnvId.EnvName}
 			}
 
+			// TODO: parallelize
 			for _, envName := range envNames {
 				envId := envsec.EnvId{
 					OrgId:     cmdCfg.EnvId.OrgId,
 					ProjectId: cmdCfg.EnvId.ProjectId,
 					EnvName:   envName,
 				}
-				orderedEnvVars, err := listEnv(cmd, cmdCfg.Store, envId)
+				envVars, err := cmdCfg.Store.List(cmd.Context(), envId)
 				if err != nil {
 					return errors.WithStack(err)
 				}
 
-				err = printEnv(cmd, envId, orderedEnvVars, flags.ShowValues)
+				err = printEnv(cmd, envId, envVars, flags.ShowValues)
 				if err != nil {
 					return errors.WithStack(err)
 				}

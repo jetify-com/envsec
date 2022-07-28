@@ -13,8 +13,6 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/envsec"
 	"go.jetpack.io/envsec/tux"
-	"golang.org/x/text/collate"
-	"golang.org/x/text/language"
 )
 
 const nameRegexStr = "^[a-zA-Z_][a-zA-Z0-9_]*"
@@ -57,30 +55,10 @@ func ensureValidNames(names []string) error {
 	return nil
 }
 
-// listEnv returns an ordered list of (name, value) pairs
-func listEnv(cmd *cobra.Command, store envsec.Store, envId envsec.EnvId) ([][]string, error) {
-
-	envVars, err := store.List(cmd.Context(), envId)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	orderedNames := lo.Keys(envVars)
-
-	c := collate.New(language.English, collate.Loose, collate.Numeric)
-	c.SortStrings(orderedNames)
-
-	orderedEnvVars := [][]string{}
-	for _, name := range orderedNames {
-		orderedEnvVars = append(orderedEnvVars, []string{name, envVars[name]})
-	}
-
-	return orderedEnvVars, nil
-}
-
 func printEnv(
 	cmd *cobra.Command,
 	envId envsec.EnvId,
-	orderedEnvVars [][]string, // list of (name, value) pairs
+	envVars []envsec.EnvVar, // list of (name, value) pairs
 	flagPrintValues bool,
 ) error {
 
@@ -91,13 +69,13 @@ func printEnv(
 	table := tablewriter.NewWriter(cmd.OutOrStdout())
 	table.SetHeader([]string{"Name", "Value"})
 	tableValues := [][]string{}
-	for _, envVar := range orderedEnvVars {
+	for _, envVar := range envVars {
 		valueToPrint := "*****"
 		if flagPrintValues {
-			valueToPrint = envVar[1]
+			valueToPrint = envVar.Value
 		}
 
-		tableValues = append(tableValues, []string{envVar[0] /*name*/, valueToPrint})
+		tableValues = append(tableValues, []string{envVar.Name /*name*/, valueToPrint})
 	}
 	table.AppendBulk(tableValues)
 
