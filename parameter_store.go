@@ -2,12 +2,14 @@ package envsec
 
 import (
 	"context"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/aws/smithy-go"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
@@ -28,6 +30,8 @@ type parameterStore struct {
 
 // Parameter values are limited in size to 4KB
 const parameterValueMaxLength = 4 * 1024
+
+var FaultyParamError = errors.New("Faulty Parameter")
 
 // New parameter store for current user/organization.
 func newParameterStore(ctx context.Context, config *SSMConfig) (*parameterStore, error) {
@@ -210,6 +214,13 @@ func (s *parameterStore) deleteAll(ctx context.Context, envId EnvId, varNames []
 		// Issue the request:
 		_, err := s.client.DeleteParameters(ctx, req)
 		if err != nil {
+			var awsErr smithy.APIError
+			if errors.As(err, &awsErr) {
+				if string(awsErr.ErrorCode()) == "AccessDeniedException" {
+					faultyParam := getFaultyParameter(awsErr.ErrorMessage())
+					return errors.Wrap(FaultyParamError, faultyParam)
+				}
+			}
 			multiErr = multierror.Append(multiErr, err)
 			continue
 		}
@@ -236,4 +247,10 @@ func (e envVars) Swap(i, j int) {
 func sort(vars envVars) {
 	c := collate.New(language.English, collate.Loose, collate.Numeric)
 	c.Sort(vars)
+}
+
+func getFaultyParameter(message string) string {
+	resourceParts := strings.Split(message, "/")
+	nameParts := strings.Split(resourceParts[len(resourceParts)-1], " ")
+	return nameParts[0]
 }
