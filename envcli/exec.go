@@ -2,6 +2,7 @@ package envcli
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -36,7 +37,7 @@ func ExecCmd(cmdCfg *CmdConfig) *cobra.Command {
 				return errors.WithStack(err)
 			}
 			// Attach stored env variables to the command environment
-			commandToRun.Env = []string{}
+			commandToRun.Env = os.Environ()
 			for _, envVar := range envVars {
 				commandToRun.Env = append(commandToRun.Env, fmt.Sprintf("%s=%s", envVar.Name, envVar.Value))
 			}
