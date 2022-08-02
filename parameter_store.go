@@ -141,7 +141,6 @@ func (s *parameterStore) listByTags(ctx context.Context, envId EnvId) ([]EnvVar,
 	}
 
 	varNames := []string{}
-
 	// Paginate through the results:
 	paginator := ssm.NewDescribeParametersPaginator(s.client, req)
 	for paginator.HasMorePages() {
@@ -150,7 +149,6 @@ func (s *parameterStore) listByTags(ctx context.Context, envId EnvId) ([]EnvVar,
 		if err != nil {
 			return []EnvVar{}, errors.WithStack(err)
 		}
-
 		// Append results:
 		for _, p := range resp.Parameters {
 			// AWS returns the parameter path as its "name":
