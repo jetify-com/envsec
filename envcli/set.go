@@ -13,6 +13,7 @@ func SetCmd(cmdCfg *CmdConfig) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "set <NAME1>=<value1> [<NAME2>=<value2>]...",
 		Short: "Securely store one or more environment variables",
+		Long:  "Securely store one or more environment variables.",
 		Args:  cobra.MinimumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			for _, arg := range args {

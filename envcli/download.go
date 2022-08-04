@@ -15,6 +15,7 @@ func DownloadCmd(cmdCfg *CmdConfig) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "download <file1>",
 		Short: "Download environment variables into the specified .env file",
+		Long:  "Download environment variables stored into the specified .env file. The format of the file is one NAME=VALUE per line.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 

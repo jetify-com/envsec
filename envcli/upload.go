@@ -16,6 +16,7 @@ func UploadCmd(cmdCfg *CmdConfig) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "upload <file1> [<fileN>]...",
 		Short: "Upload variables defined in a .env file",
+		Long:  "Upload variables defined in one or more .env files. The files should have one NAME=VALUE per line.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, relativeFilePaths []string) error {
 			wd, err := os.Getwd()

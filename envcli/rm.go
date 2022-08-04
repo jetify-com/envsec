@@ -13,6 +13,7 @@ func RemoveCmd(cmdCfg *CmdConfig) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "rm <NAME1> [<NAME2>]...",
 		Short: "Delete one or more environment variables",
+		Long:  "Delete one or more environment variables that are stored.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, envNames []string) error {
 			err := cmdCfg.Store.DeleteAll(cmd.Context(), cmdCfg.EnvId, envNames)

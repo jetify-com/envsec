@@ -19,6 +19,7 @@ func ListCmd(cmdCfg *CmdConfig) *cobra.Command {
 		Use:     "ls",
 		Aliases: []string{"list"},
 		Short:   "List all stored environment variables",
+		Long:    "List all stored environment variables. If no environment flag is provided, variables in all environments will be listed.",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Populate the valid Environments
