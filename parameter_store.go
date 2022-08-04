@@ -17,6 +17,8 @@ import (
 	"golang.org/x/text/language"
 )
 
+const emptyStringValuePlaceholder = "__###EMPTY_STRING###__"
+
 type parameter struct {
 	id          string
 	description string
@@ -71,7 +73,7 @@ func (s *parameterStore) newParameter(ctx context.Context, v *parameter, value s
 		Name:        aws.String(v.id),
 		Description: aws.String(v.description),
 		Type:        types.ParameterTypeSecureString,
-		Value:       aws.String(value),
+		Value:       awsSSMParamStoreValue(value),
 		KeyId:       aws.String(s.config.KmsKeyId),
 		Tags:        v.tags,
 	}
@@ -95,7 +97,7 @@ func (s *parameterStore) overwriteParameterValue(ctx context.Context, v *paramet
 		Name:        aws.String(v.id),
 		Description: aws.String(v.description),
 		Overwrite:   true,
-		Value:       aws.String(value),
+		Value:       awsSSMParamStoreValue(value),
 	}
 	_, err := s.client.PutParameter(ctx, input)
 	return errors.WithStack(err)
@@ -126,7 +128,7 @@ func (s *parameterStore) ListByPath(ctx context.Context, path string) ([]EnvVar,
 		for _, p := range params {
 			results = append(results, EnvVar{
 				Name:  aws.ToString(p.Name), // TODO: Full path?
-				Value: aws.ToString(p.Value),
+				Value: awsSSMParamStoreValueToString(p.Value),
 			})
 		}
 	}
@@ -188,7 +190,7 @@ func (s *parameterStore) getAll(ctx context.Context, envId EnvId, varNames []str
 		for _, p := range resp.Parameters {
 			results = append(results, EnvVar{
 				Name:  nameFromPath(aws.ToString(p.Name)),
-				Value: aws.ToString(p.Value),
+				Value: awsSSMParamStoreValueToString(p.Value),
 			})
 		}
 	}
@@ -251,4 +253,20 @@ func getFaultyParameter(message string) string {
 	resourceParts := strings.Split(message, "/")
 	nameParts := strings.Split(resourceParts[len(resourceParts)-1], " ")
 	return nameParts[0]
+}
+
+// AWS SSM Param store doesn't allow empty strings so we use a placeholder
+// instead
+func awsSSMParamStoreValue(s string) *string {
+	if s == "" {
+		return aws.String(emptyStringValuePlaceholder)
+	}
+	return aws.String("")
+}
+
+func awsSSMParamStoreValueToString(s *string) string {
+	if *s == emptyStringValuePlaceholder {
+		return ""
+	}
+	return *s
 }

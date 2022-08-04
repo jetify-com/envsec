@@ -3,11 +3,10 @@ package envsec
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
-
-	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/samber/lo"
 )
 
 type SSMStore struct {
@@ -90,26 +89,26 @@ func (s *SSMStore) DeleteAll(ctx context.Context, envId EnvId, names []string) e
 func buildFilters(envId EnvId) []types.ParameterStringFilter {
 	filters := []types.ParameterStringFilter{
 		{
-			Key:    aws.String("Path"),
-			Option: aws.String("Recursive"),
+			Key:    lo.ToPtr("Path"),
+			Option: lo.ToPtr("Recursive"),
 			Values: []string{projectPath(envId)},
 		},
 	}
 	if envId.ProjectId != "" {
 		filters = append(filters, types.ParameterStringFilter{
-			Key:    aws.String("tag:project-id"),
+			Key:    lo.ToPtr("tag:project-id"),
 			Values: []string{envId.ProjectId},
 		})
 	}
 	if envId.OrgId != "" {
 		filters = append(filters, types.ParameterStringFilter{
-			Key:    aws.String("tag:org-id"),
+			Key:    lo.ToPtr("tag:org-id"),
 			Values: []string{envId.OrgId},
 		})
 	}
 	if envId.EnvName != "" {
 		filters = append(filters, types.ParameterStringFilter{
-			Key:    aws.String("tag:env-name"),
+			Key:    lo.ToPtr("tag:env-name"),
 			Values: []string{envId.EnvName},
 		})
 	}
@@ -121,27 +120,27 @@ func buildTags(envId EnvId, varName string) []types.Tag {
 	tags := []types.Tag{}
 	if envId.ProjectId != "" {
 		tags = append(tags, types.Tag{
-			Key:   aws.String("project-id"),
-			Value: aws.String(envId.ProjectId),
+			Key:   lo.ToPtr("project-id"),
+			Value: lo.ToPtr(envId.ProjectId),
 		})
 	}
 	if envId.OrgId != "" {
 		tags = append(tags, types.Tag{
-			Key:   aws.String("org-id"),
-			Value: aws.String(envId.OrgId),
+			Key:   lo.ToPtr("org-id"),
+			Value: lo.ToPtr(envId.OrgId),
 		})
 	}
 	if envId.EnvName != "" {
 		tags = append(tags, types.Tag{
-			Key:   aws.String("env-name"),
-			Value: aws.String(envId.EnvName),
+			Key:   lo.ToPtr("env-name"),
+			Value: lo.ToPtr(envId.EnvName),
 		})
 	}
 
 	if varName != "" {
 		tags = append(tags, types.Tag{
-			Key:   aws.String("name"),
-			Value: aws.String(varName),
+			Key:   lo.ToPtr("name"),
+			Value: lo.ToPtr(varName),
 		})
 	}
 

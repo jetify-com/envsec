@@ -15,7 +15,7 @@ require (
 	github.com/muesli/termenv v0.11.1-0.20220204035834-5ac8409525e0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/errors v0.9.1
-	github.com/samber/lo v1.25.0
+	github.com/samber/lo v1.27.0
 	github.com/spf13/cobra v1.5.0
 )
 
