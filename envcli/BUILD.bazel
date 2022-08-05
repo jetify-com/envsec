@@ -18,6 +18,7 @@ go_library(
     deps = [
         "//opensource/envsec",
         "//opensource/envsec/tux",
+        "@com_github_aws_aws_sdk_go_v2_config//:config",
         "@com_github_joho_godotenv//:godotenv",
         "@com_github_makenowjust_heredoc//:heredoc",
         "@com_github_olekukonko_tablewriter//:tablewriter",

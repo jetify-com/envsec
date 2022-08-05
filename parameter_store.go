@@ -74,8 +74,13 @@ func (s *parameterStore) newParameter(ctx context.Context, v *parameter, value s
 		Description: aws.String(v.description),
 		Type:        types.ParameterTypeSecureString,
 		Value:       awsSSMParamStoreValue(value),
-		KeyId:       aws.String(s.config.KmsKeyId),
 		Tags:        v.tags,
+	}
+
+	// Set the KmsKeyId only when it is present. Otherwise, aws sdk uses the default KMS key
+	// since we specify "SecureString" type.
+	if s.config.KmsKeyId != "" {
+		input.KeyId = aws.String(s.config.KmsKeyId)
 	}
 
 	_, err := s.client.PutParameter(ctx, input)
