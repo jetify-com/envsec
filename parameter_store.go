@@ -269,7 +269,7 @@ func awsSSMParamStoreValue(s string) *string {
 	if s == "" {
 		return aws.String(emptyStringValuePlaceholder)
 	}
-	return aws.String("")
+	return aws.String(s)
 }
 
 func awsSSMParamStoreValueToString(s *string) string {
