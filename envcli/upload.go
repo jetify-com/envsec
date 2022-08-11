@@ -4,6 +4,7 @@
 package envcli
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,13 +15,26 @@ import (
 	"go.jetpack.io/envsec/tux"
 )
 
-func UploadCmd(cmdCfg *CmdConfig) *cobra.Command {
+var errUnsupportedFormat = errors.New("unsupported format")
 
+type uploadOptions struct {
+	format string
+}
+
+func UploadCmd(cmdCfg *CmdConfig) *cobra.Command {
+	opts := &uploadOptions{}
 	command := &cobra.Command{
 		Use:   "upload <file1> [<fileN>]...",
 		Short: "Upload variables defined in a .env file",
-		Long:  "Upload variables defined in one or more .env files. The files should have one NAME=VALUE per line.",
-		Args:  cobra.MinimumNArgs(1),
+		Long: "Upload variables defined in one or more .env files. The files " +
+			"should have one NAME=VALUE per line.",
+		Args: cobra.MinimumNArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if opts.format == "json" || opts.format == "env" {
+				return nil
+			}
+			return errors.Wrapf(errUnsupportedFormat, "format: %s", opts.format)
+		},
 		RunE: func(cmd *cobra.Command, relativeFilePaths []string) error {
 			wd, err := os.Getwd()
 			if err != nil {
@@ -42,9 +56,21 @@ func UploadCmd(cmdCfg *CmdConfig) *cobra.Command {
 				filePaths = append(filePaths, absPath)
 			}
 
-			envMap, err := godotenv.Read(filePaths...)
-			if err != nil {
-				return errors.WithStack(err)
+			var envMap map[string]string
+			if opts.format == "json" {
+				envMap, err = loadFromJSON(filePaths)
+				if err != nil {
+					return errors.Wrap(
+						err,
+						"failed to load from JSON. Ensure the file is a flat key-value "+
+							"JSON formatted file",
+					)
+				}
+			} else {
+				envMap, err = godotenv.Read(filePaths...)
+				if err != nil {
+					return errors.WithStack(err)
+				}
 			}
 
 			err = SetEnvMap(cmd.Context(), cmdCfg.Store, cmdCfg.EnvId, envMap)
@@ -53,7 +79,8 @@ func UploadCmd(cmdCfg *CmdConfig) *cobra.Command {
 			}
 
 			err = tux.WriteHeader(cmd.OutOrStdout(),
-				"[DONE] Uploaded environment variables from %s %v to environment: %s\n",
+				"[DONE] Uploaded %d environment variable(s) from %s %v to environment: %s\n",
+				len(envMap),
 				tux.Plural(relativeFilePaths, "file", "files"),
 				strings.Join(tux.QuotedTerms(relativeFilePaths), ", "),
 				strings.ToLower(cmdCfg.EnvId.EnvName),
@@ -64,5 +91,26 @@ func UploadCmd(cmdCfg *CmdConfig) *cobra.Command {
 			return nil
 		},
 	}
+
+	command.Flags().StringVarP(
+		&opts.format, "format", "f", "env", "File format: env or json")
+
 	return command
+}
+
+func loadFromJSON(filePaths []string) (map[string]string, error) {
+	m := map[string]string{}
+	for _, filePath := range filePaths {
+		content, err := os.ReadFile(filePath)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		if err = json.Unmarshal(content, &m); err != nil {
+			return nil, errors.WithStack(err)
+		}
+		for k, v := range m {
+			m[k] = v
+		}
+	}
+	return m, nil
 }

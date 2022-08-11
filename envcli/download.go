@@ -4,22 +4,35 @@
 package envcli
 
 import (
-	"fmt"
+	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/envsec/tux"
 )
 
+type downloadOptions struct {
+	format string
+}
+
 func DownloadCmd(cmdCfg *CmdConfig) *cobra.Command {
+	opts := &downloadOptions{}
 	command := &cobra.Command{
 		Use:   "download <file1>",
 		Short: "Download environment variables into the specified .env file",
 		Long:  "Download environment variables stored into the specified .env file. The format of the file is one NAME=VALUE per line.",
 		Args:  cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if opts.format == "json" || opts.format == "env" {
+				return nil
+			}
+			return errors.Wrapf(errUnsupportedFormat, "format: %s", opts.format)
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			envVars, err := cmdCfg.Store.List(cmd.Context(), cmdCfg.EnvId)
@@ -42,15 +55,23 @@ func DownloadCmd(cmdCfg *CmdConfig) *cobra.Command {
 			// A single relativeFilePath is guaranteed to be there.
 			filePath := filepath.Join(wd, args[0] /* relativeFilePath */)
 
-			// .env file contents
-			lines := []string{}
+			envVarMap := map[string]string{}
 			for _, envVar := range envVars {
-				// name=value
-				lines = append(lines, fmt.Sprintf("%s=%s", envVar.Name, envVar.Value))
+				envVarMap[envVar.Name] = envVar.Value
 			}
-			contents := strings.Join(lines, "\n")
 
-			err = os.WriteFile(filePath, []byte(contents), 0644)
+			var contents []byte
+			if opts.format == "json" {
+				contents, err = encodeToJSON(envVarMap)
+			} else {
+				contents, err = encodeToDotEnv(envVarMap)
+			}
+
+			if err != nil {
+				return errors.WithStack(err)
+			}
+
+			err = os.WriteFile(filePath, contents, 0644)
 			if err != nil {
 				return errors.WithStack(err)
 			}
@@ -66,5 +87,28 @@ func DownloadCmd(cmdCfg *CmdConfig) *cobra.Command {
 			return nil
 		},
 	}
+
+	command.Flags().StringVarP(
+		&opts.format, "format", "f", "env", "File format: env or json")
+
 	return command
+}
+
+func encodeToJSON(m map[string]string) ([]byte, error) {
+	b := new(bytes.Buffer)
+	encoder := json.NewEncoder(b)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(m); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return b.Bytes(), nil
+}
+
+func encodeToDotEnv(m map[string]string) ([]byte, error) {
+	envContents, err := godotenv.Marshal(m)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return []byte(envContents), nil
 }
