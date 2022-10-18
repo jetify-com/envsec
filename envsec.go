@@ -56,7 +56,6 @@ type EnvVar struct {
 func NewStore(ctx context.Context, config Config) (Store, error) {
 	switch config.(type) {
 	case *SSMConfig:
-		// Remove org argument when fully transitioned to projects
 		return newSSMStore(ctx, config.(*SSMConfig))
 	default:
 		return nil, errors.Errorf("unsupported store type: %T", config)
