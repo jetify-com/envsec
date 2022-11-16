@@ -224,7 +224,7 @@ func (s *parameterStore) deleteAll(ctx context.Context, envId EnvId, varNames []
 		if err != nil {
 			var awsErr smithy.APIError
 			if errors.As(err, &awsErr) {
-				if string(awsErr.ErrorCode()) == "AccessDeniedException" {
+				if awsErr.ErrorCode() == "AccessDeniedException" {
 					faultyParam := getFaultyParameter(awsErr.ErrorMessage())
 					return errors.Wrap(FaultyParamError, faultyParam)
 				}

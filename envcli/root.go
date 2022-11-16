@@ -37,7 +37,7 @@ func EnvCmd() *cobra.Command {
 			Environment variables are always encrypted, which makes it possible to
 			store values that contain passwords and other secrets.
 		`),
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			c, err := newCmdConfig(cmd.Context(), flags)
 			if err != nil {
 				return errors.WithStack(err)

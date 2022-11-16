@@ -83,12 +83,11 @@ func getColor(token string, invertedToken string, tokens map[string]string) lipg
 }
 
 func resolveToken(token string, tokens map[string]string) string {
-	if strings.HasPrefix(token, "$") == true {
-		resolved, ok := tokens[token]
-		if ok == true {
+	if strings.HasPrefix(token, "$") {
+		if resolved, ok := tokens[token]; ok {
 			return resolved
 		}
-		return ANSI_COLORS[token]
+		return ansiColors[token]
 	}
 	return token
 }
@@ -106,4 +105,4 @@ func StyleFunc(styleSheet StyleSheet) func(class string, text string) string {
 }
 
 // TODO: Add list of default ANSI named colors
-var ANSI_COLORS = map[string]string{}
+var ansiColors = map[string]string{}

@@ -10,7 +10,7 @@ import (
 )
 
 // TODO: move to file
-var USAGE_TMPL = heredoc.Doc(`
+var usageTmpl = heredoc.Doc(`
 {{ "Usage:" | style "h2" }}
 	{{if .Runnable}}{{.UseLine | style "command" }}{{end}}
 	{{- if .HasAvailableSubCommands}} {{"<command>" | style "subcommand"}}{{end}}
@@ -72,23 +72,23 @@ Use "{{.CommandPath}} [command] --help" for more information about a command.
 {{- end}}
 `)
 
-var BASE_STYLE = tux.StyleSheet{
+var baseStyle = tux.StyleSheet{
 	Styles: map[string]tux.StyleRule{
-		"h1": tux.StyleRule{
+		"h1": {
 			Bold:       true,
 			Foreground: "$purple",
 		},
-		"h2": tux.StyleRule{
+		"h2": {
 			Bold: true,
 			// Foreground: "$purple",
 		},
-		"command": tux.StyleRule{
+		"command": {
 			Foreground: "$cyan",
 		},
-		"subcommand": tux.StyleRule{
+		"subcommand": {
 			Foreground: "$magenta",
 		},
-		"flag": tux.StyleRule{
+		"flag": {
 			Bold:       true,
 			Foreground: "$purple",
 		},
@@ -107,7 +107,7 @@ func UsageFunc(cmd *cobra.Command) error {
 	t.SetIn(cmd.InOrStdin())
 	t.SetOut(cmd.OutOrStdout())
 	t.SetErr(cmd.ErrOrStderr())
-	t.SetStyleSheet(BASE_STYLE)
-	t.PrintT(USAGE_TMPL, cmd)
+	t.SetStyleSheet(baseStyle)
+	t.PrintT(usageTmpl, cmd)
 	return nil
 }

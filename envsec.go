@@ -54,9 +54,9 @@ type EnvVar struct {
 }
 
 func NewStore(ctx context.Context, config Config) (Store, error) {
-	switch config.(type) {
+	switch config := config.(type) {
 	case *SSMConfig:
-		return newSSMStore(ctx, config.(*SSMConfig))
+		return newSSMStore(ctx, config)
 	default:
 		return nil, errors.Errorf("unsupported store type: %T", config)
 	}
