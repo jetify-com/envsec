@@ -40,7 +40,7 @@ func Render(styleSheet StyleSheet, class string, text string) string {
 }
 
 type StyleRenderer interface {
-	Render(str string) string
+	Render(str ...string) string
 }
 
 func Renderer(styleRule StyleRule, tokens map[string]string) StyleRenderer {

@@ -104,7 +104,7 @@ func (s *parameterStore) overwriteParameterValue(ctx context.Context, v *paramet
 	input := &ssm.PutParameterInput{
 		Name:        aws.String(v.id),
 		Description: aws.String(v.description),
-		Overwrite:   true,
+		Overwrite:   lo.ToPtr(true),
 		Value:       awsSSMParamStoreValue(value),
 	}
 	_, err := s.client.PutParameter(ctx, input)
@@ -115,8 +115,8 @@ func (s *parameterStore) ListByPath(ctx context.Context, path string) ([]EnvVar,
 	// Create the request object:
 	req := &ssm.GetParametersByPathInput{
 		Path:           aws.String(path),
-		WithDecryption: true,
-		Recursive:      true,
+		WithDecryption: lo.ToPtr(true),
+		Recursive:      lo.ToPtr(true),
 	}
 
 	// Start with empty results
@@ -184,7 +184,7 @@ func (s *parameterStore) getAll(ctx context.Context, envId EnvId, varNames []str
 		// Create the request object:
 		req := &ssm.GetParametersInput{
 			Names:          chunk,
-			WithDecryption: true,
+			WithDecryption: lo.ToPtr(true),
 		}
 		// Issue the request:
 		resp, err := s.client.GetParameters(ctx, req)
