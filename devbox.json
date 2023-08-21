@@ -1,0 +1,15 @@
+{
+  "packages": ["go_1_19"],
+  "shell": {
+    "init_hook": [
+      "export \"GOROOT=$(go env GOROOT)\"",
+      "export \"PATH=$(pwd)/dist:$PATH\""
+    ],
+    "scripts": {
+      "build": "go build -o dist/envsec cmd/envsec/main.go"
+    }
+  },
+  "nixpkgs": {
+    "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+  }
+}
