@@ -7,8 +7,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"go.jetpack.io/pkg/auth"
-	"go.jetpack.io/pkg/envir"
+	"go.jetpack.io/envsec/auth"
+	"go.jetpack.io/envsec/envvar"
 )
 
 func authCmd() *cobra.Command {
@@ -96,19 +96,19 @@ func newAuthenticator() *auth.Authenticator {
 	return &auth.Authenticator{
 		AppName:         "envsec",
 		AuthCommandHint: "devbox auth login",
-		ClientID: envir.GetValueOrDefault(
+		ClientID: envvar.Get(
 			"ENVSEC_AUTH_CLIENT_ID",
 			"5PusB4fMm6BQ8WbTFObkTI0JUDi9ahPC",
 		),
-		Domain: envir.GetValueOrDefault(
+		Domain: envvar.Get(
 			"ENVSEC_AUTH_DOMAIN",
 			"auth.jetpack.io",
 		),
-		Scope: envir.GetValueOrDefault(
+		Scope: envvar.Get(
 			"ENVSEC_AUTH_SCOPE",
 			"openid offline_access email profile",
 		),
-		Audience: envir.GetValueOrDefault(
+		Audience: envvar.Get(
 			"ENVSEC_AUTH_AUDIENCE",
 			"https://api.jetpack.io",
 		),
