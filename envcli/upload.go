@@ -17,12 +17,13 @@ import (
 
 var errUnsupportedFormat = errors.New("unsupported format")
 
-type uploadOptions struct {
+type uploadCmdFlags struct {
+	configFlags
 	format string
 }
 
-func UploadCmd(cmdCfg *CmdConfig) *cobra.Command {
-	opts := &uploadOptions{}
+func uploadCmd() *cobra.Command {
+	flags := &uploadCmdFlags{}
 	command := &cobra.Command{
 		Use:   "upload <file1> [<fileN>]...",
 		Short: "Upload variables defined in a .env file",
@@ -30,10 +31,10 @@ func UploadCmd(cmdCfg *CmdConfig) *cobra.Command {
 			"should have one NAME=VALUE per line.",
 		Args: cobra.MinimumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if opts.format == "json" || opts.format == "env" {
+			if flags.format == "json" || flags.format == "env" {
 				return nil
 			}
-			return errors.Wrapf(errUnsupportedFormat, "format: %s", opts.format)
+			return errors.Wrapf(errUnsupportedFormat, "format: %s", flags.format)
 		},
 		RunE: func(cmd *cobra.Command, relativeFilePaths []string) error {
 			wd, err := os.Getwd()
@@ -57,7 +58,7 @@ func UploadCmd(cmdCfg *CmdConfig) *cobra.Command {
 			}
 
 			var envMap map[string]string
-			if opts.format == "json" {
+			if flags.format == "json" {
 				envMap, err = loadFromJSON(filePaths)
 				if err != nil {
 					return errors.Wrap(
@@ -73,6 +74,10 @@ func UploadCmd(cmdCfg *CmdConfig) *cobra.Command {
 				}
 			}
 
+			cmdCfg, err := flags.genConfig(cmd.Context())
+			if err != nil {
+				return err
+			}
 			err = SetEnvMap(cmd.Context(), cmdCfg.Store, cmdCfg.EnvId, envMap)
 			if err != nil {
 				return errors.WithStack(err)
@@ -93,7 +98,8 @@ func UploadCmd(cmdCfg *CmdConfig) *cobra.Command {
 	}
 
 	command.Flags().StringVarP(
-		&opts.format, "format", "f", "env", "File format: env or json")
+		&flags.format, "format", "f", "env", "File format: env or json")
+	flags.configFlags.register(command)
 
 	return command
 }

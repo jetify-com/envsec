@@ -44,14 +44,14 @@ var usageTmpl = heredoc.Doc(`
 {{- if .HasAvailableLocalFlags}}
 
 {{ "Flags:" | style "h2" }}
-	{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}
+{{ .LocalFlags.FlagUsages | trimTrailingWhitespaces}}
 {{- end}}
 
 
 {{- if .HasAvailableInheritedFlags}}
 
 {{ "Global Flags:" | style "h2" }}
-	{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}
+{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}
 {{- end}}
 
 

@@ -14,13 +14,22 @@ import (
 	"go.jetpack.io/envsec"
 )
 
-func ExecCmd(cmdCfg *CmdConfig) *cobra.Command {
+type execCmdFlags struct {
+	configFlags
+}
+
+func execCmd() *cobra.Command {
+	flags := &execCmdFlags{}
 	command := &cobra.Command{
 		Use:   "exec <command>",
 		Short: "Execute a command with Jetpack-stored environment variables",
 		Long:  "Execute a specified command with remote environment variables being present for the duration of the command. If an environment variable exists both locally and in remote storage, the remotely stored one is prioritized.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cmdCfg, err := flags.genConfig(cmd.Context())
+			if err != nil {
+				return err
+			}
 			commandString := strings.Join(args, " ")
 			commandToRun := exec.Command("/bin/sh", "-c", commandString)
 
@@ -51,5 +60,6 @@ func ExecCmd(cmdCfg *CmdConfig) *cobra.Command {
 			return commandToRun.Run()
 		},
 	}
+	flags.configFlags.register(command)
 	return command
 }

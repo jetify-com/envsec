@@ -12,14 +12,23 @@ import (
 	"go.jetpack.io/envsec/tux"
 )
 
-func RemoveCmd(cmdCfg *CmdConfig) *cobra.Command {
+type removeCmdFlags struct {
+	configFlags
+}
+
+func removeCmd() *cobra.Command {
+	flags := &removeCmdFlags{}
 	command := &cobra.Command{
 		Use:   "rm <NAME1> [<NAME2>]...",
 		Short: "Delete one or more environment variables",
 		Long:  "Delete one or more environment variables that are stored.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, envNames []string) error {
-			err := cmdCfg.Store.DeleteAll(cmd.Context(), cmdCfg.EnvId, envNames)
+			cmdCfg, err := flags.genConfig(cmd.Context())
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			err = cmdCfg.Store.DeleteAll(cmd.Context(), cmdCfg.EnvId, envNames)
 			if err == nil {
 				err = tux.WriteHeader(cmd.OutOrStdout(),
 					"[DONE] Deleted environment %s %v in environment: %s\n",
@@ -42,6 +51,7 @@ func RemoveCmd(cmdCfg *CmdConfig) *cobra.Command {
 			return nil
 		},
 	}
+	flags.configFlags.register(command)
 
 	return command
 }

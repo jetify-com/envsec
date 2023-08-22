@@ -50,3 +50,5 @@ require (
 	golang.org/x/sys v0.8.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
+
+replace go.jetpack.io/pkg => ../pkg

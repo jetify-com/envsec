@@ -16,25 +16,29 @@ import (
 	"go.jetpack.io/envsec/tux"
 )
 
-type downloadOptions struct {
+type downloadCmdFlags struct {
+	configFlags
 	format string
 }
 
-func DownloadCmd(cmdCfg *CmdConfig) *cobra.Command {
-	opts := &downloadOptions{}
+func downloadCmd() *cobra.Command {
+	flags := &downloadCmdFlags{}
 	command := &cobra.Command{
 		Use:   "download <file1>",
 		Short: "Download environment variables into the specified file",
 		Long:  "Download environment variables stored into the specified file (most commonly a .env file). The format of the file is one NAME=VALUE per line.",
 		Args:  cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if opts.format == "json" || opts.format == "env" {
+			if flags.format == "json" || flags.format == "env" {
 				return nil
 			}
-			return errors.Wrapf(errUnsupportedFormat, "format: %s", opts.format)
+			return errors.Wrapf(errUnsupportedFormat, "format: %s", flags.format)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-
+			cmdCfg, err := flags.genConfig(cmd.Context())
+			if err != nil {
+				return errors.WithStack(err)
+			}
 			envVars, err := cmdCfg.Store.List(cmd.Context(), cmdCfg.EnvId)
 			if err != nil {
 				return errors.WithStack(err)
@@ -61,7 +65,7 @@ func DownloadCmd(cmdCfg *CmdConfig) *cobra.Command {
 			}
 
 			var contents []byte
-			if opts.format == "json" {
+			if flags.format == "json" {
 				contents, err = encodeToJSON(envVarMap)
 			} else {
 				contents, err = encodeToDotEnv(envVarMap)
@@ -88,8 +92,9 @@ func DownloadCmd(cmdCfg *CmdConfig) *cobra.Command {
 		},
 	}
 
+	flags.configFlags.register(command)
 	command.Flags().StringVarP(
-		&opts.format, "format", "f", "env", "File format: env or json")
+		&flags.format, "format", "f", "env", "File format: env or json")
 
 	return command
 }
