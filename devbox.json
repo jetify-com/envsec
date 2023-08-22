@@ -1,12 +1,16 @@
 {
-  "packages": ["go_1_19"],
+  "packages": [
+    "go@latest",
+    "golangci-lint@latest"
+  ],
   "shell": {
     "init_hook": [
       "export \"GOROOT=$(go env GOROOT)\"",
       "export \"PATH=$(pwd)/dist:$PATH\""
     ],
     "scripts": {
-      "build": "go build -o dist/envsec cmd/envsec/main.go"
+      "build": "go build -o dist/envsec cmd/envsec/main.go",
+      "lint": "golangci-lint run"
     }
   },
   "nixpkgs": {
