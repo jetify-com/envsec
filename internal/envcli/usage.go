@@ -6,7 +6,7 @@ package envcli
 import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/envsec/tux"
+	"go.jetpack.io/envsec/internal/tux"
 )
 
 // TODO: move to file

@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/envsec"
-	"go.jetpack.io/envsec/tux"
+	"go.jetpack.io/envsec/internal/tux"
 )
 
 type removeCmdFlags struct {

@@ -6,7 +6,7 @@ package main
 import (
 	"context"
 
-	"go.jetpack.io/envsec/envcli"
+	"go.jetpack.io/envsec/internal/envcli"
 )
 
 func main() {

@@ -28,13 +28,14 @@ func EnvCmd() *cobra.Command {
 		SilenceUsage: true,
 	}
 
+	command.AddCommand(authCmd())
 	command.AddCommand(downloadCmd())
 	command.AddCommand(execCmd())
+	command.AddCommand(initCmd())
 	command.AddCommand(listCmd())
 	command.AddCommand(removeCmd())
 	command.AddCommand(setCmd())
 	command.AddCommand(uploadCmd())
-	command.AddCommand(authCmd())
 	command.SetUsageFunc(UsageFunc)
 	return command
 }

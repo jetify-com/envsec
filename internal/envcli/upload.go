@@ -12,7 +12,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/envsec/tux"
+	"go.jetpack.io/envsec/internal/tux"
 )
 
 var errUnsupportedFormat = errors.New("unsupported format")

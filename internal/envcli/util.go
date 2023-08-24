@@ -16,7 +16,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/envsec"
-	"go.jetpack.io/envsec/tux"
+	"go.jetpack.io/envsec/internal/tux"
 )
 
 const nameRegexStr = "^[a-zA-Z_][a-zA-Z0-9_]*"
