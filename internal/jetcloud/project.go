@@ -1,6 +1,7 @@
 package jetcloud
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -16,7 +17,7 @@ type projectConfig struct {
 	ID projectID `json:"id"`
 }
 
-func InitProject(user *auth.User, wd string) (projectID, error) {
+func InitProject(ctx context.Context, user *auth.User, wd string) (projectID, error) {
 	existing, err := ProjectID(wd)
 	if err == nil {
 		return nilProjectID,
@@ -37,7 +38,7 @@ func InitProject(user *auth.User, wd string) (projectID, error) {
 	repoURL, _ := gitRepoURL(wd)
 	subdir, _ := gitSubdirectory(wd)
 
-	projectID, err := newClient().newProjectID(user, repoURL, subdir)
+	projectID, err := newClient().newProjectID(ctx, user, repoURL, subdir)
 	if err != nil {
 		return nilProjectID, err
 	}

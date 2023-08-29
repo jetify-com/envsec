@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -50,10 +49,10 @@ func (c *client) endpoint(path string) string {
 	return endpointURL
 }
 
-func (c *client) newProjectID(user *auth.User, repo, subdir string) (projectID, error) {
+func (c *client) newProjectID(ctx context.Context, user *auth.User, repo, subdir string) (projectID, error) {
 	fmt.Fprintf(os.Stderr, "Creating new project for repo=%s subdir=%s\n", repo, subdir)
 
-	p, err := post[project](c, user, map[string]string{
+	p, err := post[project](ctx, c, user, map[string]string{
 		// TODO: org_id should be a claim in the ID token, not passed as post data
 		"org_id":   user.OrgID(),
 		"repo_url": repo,
@@ -66,7 +65,7 @@ func (c *client) newProjectID(user *auth.User, repo, subdir string) (projectID, 
 	return p.ID, nil
 }
 
-func post[T any](c *client, user *auth.User, data any) (*T, error) {
+func post[T any](ctx context.Context, c *client, user *auth.User, data any) (*T, error) {
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
 		return nil, err
@@ -75,7 +74,7 @@ func post[T any](c *client, user *auth.User, data any) (*T, error) {
 	src := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: user.IDToken.Raw},
 	)
-	httpClient := oauth2.NewClient(context.Background(), src)
+	httpClient := oauth2.NewClient(ctx, src)
 
 	req, err := http.NewRequest(
 		http.MethodPost,
@@ -98,7 +97,6 @@ func post[T any](c *client, user *auth.User, data any) (*T, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Println(string(body))
 
 	var result T
 	if err := json.Unmarshal(body, &result); err != nil {

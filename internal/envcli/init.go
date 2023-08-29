@@ -24,11 +24,11 @@ func initCmd() *cobra.Command {
 				return err
 			}
 
-			projectID, err := jetcloud.InitProject(user, wd)
+			projectID, err := jetcloud.InitProject(cmd.Context(), user, wd)
 			if err != nil {
 				return err
 			}
-			fmt.Println(projectID)
+			fmt.Fprintf(cmd.ErrOrStderr(), "Initialized project ID=%s\n", projectID)
 			return nil
 		},
 	}
