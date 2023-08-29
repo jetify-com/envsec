@@ -66,6 +66,13 @@ func (u *User) ID() string {
 	return u.IDToken.Claims.(jwt.MapClaims)["sub"].(string)
 }
 
+func (u *User) OrgID() string {
+	if u == nil || u.IDToken == nil {
+		return ""
+	}
+	return u.IDToken.Claims.(jwt.MapClaims)["org_id"].(string)
+}
+
 func (a *Authenticator) parseToken(stringToken string) (*jwt.Token, error) {
 	jwksURL := fmt.Sprintf(
 		"https://%s/.well-known/jwks.json",
