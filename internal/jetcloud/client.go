@@ -72,7 +72,7 @@ func post[T any](ctx context.Context, c *client, user *auth.User, data any) (*T,
 	}
 
 	src := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: user.IDToken.Raw},
+		&oauth2.Token{AccessToken: user.AccessToken.Raw},
 	)
 	httpClient := oauth2.NewClient(ctx, src)
 

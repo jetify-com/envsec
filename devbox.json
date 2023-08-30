@@ -10,8 +10,8 @@
     ],
     "scripts": {
       "build": "go build -o dist/envsec cmd/envsec/main.go",
-      "test": "go test ./...",
-      "lint": "golangci-lint run"
+      "lint": "golangci-lint run",
+      "test": "go test ./..."
     }
   },
   "nixpkgs": {

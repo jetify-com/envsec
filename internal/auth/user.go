@@ -13,13 +13,13 @@ import (
 )
 
 type User struct {
-	filesystemTokens *tokenSet
-	IDToken          *jwt.Token
+	AccessToken *jwt.Token
+	IDToken     *jwt.Token
 }
 
 func (a *Authenticator) GetUser() (*User, error) {
-	filesystemTokens := &tokenSet{}
-	if err := parseFile(a.getAuthFilePath(), filesystemTokens); err != nil {
+	unverifiedTokens := &tokenSet{}
+	if err := parseFile(a.getAuthFilePath(), unverifiedTokens); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return nil, fmt.Errorf(
 				"you must be logged in to use this command. Run `%s`", a.AuthCommandHint,
@@ -27,25 +27,26 @@ func (a *Authenticator) GetUser() (*User, error) {
 		}
 		return nil, err
 	}
-	// Attempt to parse and verify the ID token.
-	IDToken, err := a.parseToken(filesystemTokens.IDToken)
+	// Attempt to parse and verify the tokens.
+	user, err := a.verifyAndBuildUser(unverifiedTokens)
 	if err != nil && !errors.Is(err, jwt.ErrTokenExpired) {
 		return nil, err
 	}
 
 	// If the token is expired, refresh the tokens and try again.
 	if errors.Is(err, jwt.ErrTokenExpired) {
-		filesystemTokens, err = a.RefreshTokens()
+		unverifiedTokens, err = a.RefreshTokens()
 		if err != nil {
 			return nil, err
 		}
-		IDToken, err = a.parseToken(filesystemTokens.IDToken)
-		if err != nil {
+
+		user, err = a.verifyAndBuildUser(unverifiedTokens)
+		if err != nil && !errors.Is(err, jwt.ErrTokenExpired) {
 			return nil, err
 		}
 	}
 
-	return &User{filesystemTokens: filesystemTokens, IDToken: IDToken}, nil
+	return user, nil
 }
 
 func (u *User) String() string {
@@ -73,7 +74,7 @@ func (u *User) OrgID() string {
 	return u.IDToken.Claims.(jwt.MapClaims)["org_id"].(string)
 }
 
-func (a *Authenticator) parseToken(stringToken string) (*jwt.Token, error) {
+func (a *Authenticator) verifyAndBuildUser(tokens *tokenSet) (*User, error) {
 	jwksURL := fmt.Sprintf(
 		"https://%s/.well-known/jwks.json",
 		a.Domain,
@@ -84,10 +85,17 @@ func (a *Authenticator) parseToken(stringToken string) (*jwt.Token, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	token, err := jwt.Parse(stringToken, jwks.Keyfunc)
+	accessToken, err := jwt.Parse(tokens.AccessToken, jwks.Keyfunc)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	idToken, err := jwt.Parse(tokens.IDToken, jwks.Keyfunc)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	return token, nil
+	return &User{
+		AccessToken: accessToken,
+		IDToken:     idToken,
+	}, nil
 }
