@@ -94,7 +94,7 @@ func buildFilters(envId EnvId) []types.ParameterStringFilter {
 		{
 			Key:    lo.ToPtr("Path"),
 			Option: lo.ToPtr("Recursive"),
-			Values: []string{projectPath(envId)},
+			Values: []string{pathNamespace(envId)},
 		},
 	}
 	if envId.ProjectId != "" {

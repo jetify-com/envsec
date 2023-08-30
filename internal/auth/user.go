@@ -12,6 +12,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+const orgIDClaim = "https://auth.jetpack.io/org_id"
+
+var ErrNotLoggedIn = errors.New("not logged in")
+
 type User struct {
 	AccessToken *jwt.Token
 	IDToken     *jwt.Token
@@ -21,8 +25,10 @@ func (a *Authenticator) GetUser() (*User, error) {
 	unverifiedTokens := &tokenSet{}
 	if err := parseFile(a.getAuthFilePath(), unverifiedTokens); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return nil, fmt.Errorf(
-				"you must be logged in to use this command. Run `%s`", a.AuthCommandHint,
+			return nil, errors.Wrapf(
+				ErrNotLoggedIn,
+				"you must be logged in to use this command. Run `%s`",
+				a.AuthCommandHint,
 			)
 		}
 		return nil, err
@@ -71,7 +77,7 @@ func (u *User) OrgID() string {
 	if u == nil || u.IDToken == nil {
 		return ""
 	}
-	return u.IDToken.Claims.(jwt.MapClaims)["org_id"].(string)
+	return u.AccessToken.Claims.(jwt.MapClaims)[orgIDClaim].(string)
 }
 
 func (a *Authenticator) verifyAndBuildUser(tokens *tokenSet) (*User, error) {
