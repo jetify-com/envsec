@@ -53,8 +53,6 @@ func (c *client) newProjectID(ctx context.Context, user *auth.User, repo, subdir
 	fmt.Fprintf(os.Stderr, "Creating new project for repo=%s subdir=%s\n", repo, subdir)
 
 	p, err := post[project](ctx, c, user, map[string]string{
-		// TODO: org_id should be a claim in the ID token, not passed as post data
-		"org_id":   user.OrgID(),
 		"repo_url": repo,
 		"subdir":   subdir,
 	})
