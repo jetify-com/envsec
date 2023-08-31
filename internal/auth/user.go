@@ -4,10 +4,8 @@
 package auth
 
 import (
-	"fmt"
 	"os"
 
-	"github.com/MicahParks/keyfunc/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 )
@@ -81,16 +79,11 @@ func (u *User) OrgID() string {
 }
 
 func (a *Authenticator) verifyAndBuildUser(tokens *tokenSet) (*User, error) {
-	jwksURL := fmt.Sprintf(
-		"https://%s/.well-known/jwks.json",
-		a.Domain,
-	)
-	// TODO: Cache this
-	jwks, err := keyfunc.Get(jwksURL, keyfunc.Options{})
+
+	jwks, err := a.fetchJWKSWithCache()
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-
 	accessToken, err := jwt.Parse(tokens.AccessToken, jwks.Keyfunc)
 	if err != nil {
 		return nil, errors.WithStack(err)
