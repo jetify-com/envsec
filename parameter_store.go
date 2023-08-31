@@ -147,7 +147,7 @@ func (s *parameterStore) ListByPath(ctx context.Context, path string) ([]EnvVar,
 func (s *parameterStore) listByTags(ctx context.Context, envId EnvId) ([]EnvVar, error) {
 	// Create the request object:
 	req := &ssm.DescribeParametersInput{
-		ParameterFilters: buildFilters(envId),
+		ParameterFilters: s.buildFilters(envId),
 	}
 
 	varNames := []string{}
@@ -170,11 +170,41 @@ func (s *parameterStore) listByTags(ctx context.Context, envId EnvId) ([]EnvVar,
 	return s.getAll(ctx, envId, varNames)
 }
 
+func (s *parameterStore) buildFilters(envId EnvId) []types.ParameterStringFilter {
+	filters := []types.ParameterStringFilter{
+		{
+			Key:    lo.ToPtr("Path"),
+			Option: lo.ToPtr("Recursive"),
+			Values: []string{s.config.PathNamespace(envId)},
+		},
+	}
+	if envId.ProjectId != "" {
+		filters = append(filters, types.ParameterStringFilter{
+			Key:    lo.ToPtr("tag:project-id"),
+			Values: []string{envId.ProjectId},
+		})
+	}
+	if envId.OrgId != "" {
+		filters = append(filters, types.ParameterStringFilter{
+			Key:    lo.ToPtr("tag:org-id"),
+			Values: []string{envId.OrgId},
+		})
+	}
+	if envId.EnvName != "" {
+		filters = append(filters, types.ParameterStringFilter{
+			Key:    lo.ToPtr("tag:env-name"),
+			Values: []string{envId.EnvName},
+		})
+	}
+
+	return filters
+}
+
 func (s *parameterStore) getAll(ctx context.Context, envId EnvId, varNames []string) ([]EnvVar, error) {
 	// Start with empty results
 	results := []EnvVar{}
 	paths := lo.Map(varNames, func(name string, _ int) string {
-		return varPath(envId, name)
+		return s.config.VarPath(envId, name)
 	})
 
 	// Due to AWS API limits, chunk into groups of 10
@@ -208,7 +238,7 @@ func (s *parameterStore) getAll(ctx context.Context, envId EnvId, varNames []str
 
 func (s *parameterStore) deleteAll(ctx context.Context, envId EnvId, varNames []string) error {
 	paths := lo.Map(varNames, func(name string, _ int) string {
-		return varPath(envId, name)
+		return s.config.VarPath(envId, name)
 	})
 	// Due to AWS API limits, chunk into groups of 10
 	chunks := lo.Chunk(paths, 10)

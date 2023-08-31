@@ -5,9 +5,12 @@ package envsec
 
 import (
 	"context"
+	"path"
 
 	"github.com/pkg/errors"
 )
+
+const PATH_PREFIX = "/jetpack-data/env"
 
 // Uniquely identifies an environment in which we store environment variables.
 type EnvId struct {
@@ -64,6 +67,8 @@ func NewStore(ctx context.Context, config Config) (Store, error) {
 
 type Config interface {
 	IsEnvStoreConfig() bool
+	VarPath(envId EnvId, varName string) string
+	PathNamespace(envId EnvId) string
 }
 
 type SSMConfig struct {
@@ -79,4 +84,17 @@ var _ Config = (*SSMConfig)(nil)
 
 func (c *SSMConfig) IsEnvStoreConfig() bool {
 	return true
+}
+
+func (c *SSMConfig) VarPath(envId EnvId, varName string) string {
+	return path.Join(
+		c.PathNamespace(envId),
+		envId.ProjectId,
+		envId.EnvName,
+		varName,
+	)
+}
+
+func (c *SSMConfig) PathNamespace(envId EnvId) string {
+	return path.Join(PATH_PREFIX, envId.OrgId)
 }
