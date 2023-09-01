@@ -102,7 +102,7 @@ func newAuthenticator() *auth.Authenticator {
 		),
 		Domain: envvar.Get(
 			"ENVSEC_AUTH_DOMAIN",
-			"auth.jetpack.io",
+			"accounts.jetpack.io",
 		),
 		Scope: envvar.Get(
 			"ENVSEC_AUTH_SCOPE",

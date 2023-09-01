@@ -19,7 +19,7 @@ func New() *AWSFed {
 	return &AWSFed{
 		AccountId:      "984256416385",
 		IdentityPoolId: "us-west-2:8111c156-085b-4ac5-b94d-f823205f6261",
-		Provider:       "auth.jetpack.io",
+		Provider:       "accounts.jetpack.io",
 		Region:         "us-west-2",
 	}
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const orgIDClaim = "https://auth.jetpack.io/org_id"
+const orgIDClaim = "org_id"
 
 var ErrNotLoggedIn = errors.New("not logged in")
 
