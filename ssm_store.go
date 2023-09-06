@@ -31,6 +31,9 @@ func newSSMStore(ctx context.Context, config *SSMConfig) (*SSMStore, error) {
 }
 
 func (s *SSMStore) List(ctx context.Context, envId EnvId) ([]EnvVar, error) {
+	if s.store.config.hasDefaultPaths() {
+		return s.store.listByPath(ctx, envId)
+	}
 	return s.store.listByTags(ctx, envId)
 }
 
@@ -55,7 +58,7 @@ func (s *SSMStore) Set(
 	name string,
 	value string,
 ) error {
-	path := s.store.config.VarPath(envId, name)
+	path := s.store.config.varPath(envId, name)
 
 	// New parameter definition
 	tags := buildTags(envId, name)

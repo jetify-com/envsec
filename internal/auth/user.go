@@ -8,9 +8,13 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
+	"go.jetpack.io/envsec/internal/envvar"
 )
 
-const orgIDClaim = "org_id"
+var orgIDClaim = envvar.Get(
+	"ENVSEC_ORG_ID_CLAIM",
+	"org_id",
+)
 
 var ErrNotLoggedIn = errors.New("not logged in")
 

@@ -111,10 +111,10 @@ func (s *parameterStore) overwriteParameterValue(ctx context.Context, v *paramet
 	return errors.WithStack(err)
 }
 
-func (s *parameterStore) ListByPath(ctx context.Context, path string) ([]EnvVar, error) {
+func (s *parameterStore) listByPath(ctx context.Context, id EnvId) ([]EnvVar, error) {
 	// Create the request object:
 	req := &ssm.GetParametersByPathInput{
-		Path:           aws.String(path),
+		Path:           aws.String(s.config.varPath(id, "")),
 		WithDecryption: lo.ToPtr(true),
 		Recursive:      lo.ToPtr(true),
 	}
@@ -135,12 +135,13 @@ func (s *parameterStore) ListByPath(ctx context.Context, path string) ([]EnvVar,
 		params := resp.Parameters
 		for _, p := range params {
 			results = append(results, EnvVar{
-				Name:  aws.ToString(p.Name), // TODO: Full path?
+				Name:  nameFromPath(aws.ToString(p.Name)),
 				Value: awsSSMParamStoreValueToString(p.Value),
 			})
 		}
 	}
 	sort(results)
+
 	return results, nil
 }
 
@@ -175,7 +176,7 @@ func (s *parameterStore) buildFilters(envId EnvId) []types.ParameterStringFilter
 		{
 			Key:    lo.ToPtr("Path"),
 			Option: lo.ToPtr("Recursive"),
-			Values: []string{s.config.PathNamespace(envId)},
+			Values: []string{s.config.pathNamespace(envId)},
 		},
 	}
 	if envId.ProjectId != "" {
@@ -204,7 +205,7 @@ func (s *parameterStore) getAll(ctx context.Context, envId EnvId, varNames []str
 	// Start with empty results
 	results := []EnvVar{}
 	paths := lo.Map(varNames, func(name string, _ int) string {
-		return s.config.VarPath(envId, name)
+		return s.config.varPath(envId, name)
 	})
 
 	// Due to AWS API limits, chunk into groups of 10
@@ -238,7 +239,7 @@ func (s *parameterStore) getAll(ctx context.Context, envId EnvId, varNames []str
 
 func (s *parameterStore) deleteAll(ctx context.Context, envId EnvId, varNames []string) error {
 	paths := lo.Map(varNames, func(name string, _ int) string {
-		return s.config.VarPath(envId, name)
+		return s.config.varPath(envId, name)
 	})
 	// Due to AWS API limits, chunk into groups of 10
 	chunks := lo.Chunk(paths, 10)

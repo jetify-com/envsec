@@ -67,8 +67,6 @@ func NewStore(ctx context.Context, config Config) (Store, error) {
 
 type Config interface {
 	IsEnvStoreConfig() bool
-	VarPath(envId EnvId, varName string) string
-	PathNamespace(envId EnvId) string
 }
 
 type SSMConfig struct {
@@ -77,6 +75,9 @@ type SSMConfig struct {
 	SecretAccessKey string
 	SessionToken    string
 	KmsKeyId        string
+
+	VarPathFn       func(envId EnvId, varName string) string
+	PathNamespaceFn func(envId EnvId) string
 }
 
 // SSMStore implements interface Config (compile-time check)
@@ -86,15 +87,25 @@ func (c *SSMConfig) IsEnvStoreConfig() bool {
 	return true
 }
 
-func (c *SSMConfig) VarPath(envId EnvId, varName string) string {
+func (c *SSMConfig) varPath(envId EnvId, varName string) string {
+	if c.VarPathFn != nil {
+		return c.VarPathFn(envId, varName)
+	}
 	return path.Join(
-		c.PathNamespace(envId),
+		c.pathNamespace(envId),
 		envId.ProjectId,
 		envId.EnvName,
 		varName,
 	)
 }
 
-func (c *SSMConfig) PathNamespace(envId EnvId) string {
+func (c *SSMConfig) pathNamespace(envId EnvId) string {
+	if c.PathNamespaceFn != nil {
+		return c.PathNamespaceFn(envId)
+	}
 	return path.Join(PATH_PREFIX, envId.OrgId)
+}
+
+func (c *SSMConfig) hasDefaultPaths() bool {
+	return c.VarPathFn == nil && c.PathNamespaceFn == nil
 }
