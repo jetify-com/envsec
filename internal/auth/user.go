@@ -9,6 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 	"go.jetpack.io/envsec/internal/envvar"
+	"go.jetpack.io/envsec/internal/typeids"
 )
 
 var orgIDClaim = envvar.Get(
@@ -17,6 +18,7 @@ var orgIDClaim = envvar.Get(
 )
 
 var ErrNotLoggedIn = errors.New("not logged in")
+var ErrNoOrgID = errors.New("no org ID")
 
 type User struct {
 	AccessToken *jwt.Token
@@ -75,11 +77,15 @@ func (u *User) ID() string {
 	return u.IDToken.Claims.(jwt.MapClaims)["sub"].(string)
 }
 
-func (u *User) OrgID() string {
-	if u == nil || u.IDToken == nil {
-		return ""
+func (u *User) OrgID() (typeids.OrganizationID, error) {
+	if u == nil || u.AccessToken == nil {
+		return typeids.NilOrganizationID, ErrNotLoggedIn
 	}
-	return u.AccessToken.Claims.(jwt.MapClaims)[orgIDClaim].(string)
+	id, ok := u.AccessToken.Claims.(jwt.MapClaims)[orgIDClaim].(string)
+	if !ok {
+		return typeids.NilOrganizationID, ErrNoOrgID
+	}
+	return typeids.OrganizationIDFromString(id)
 }
 
 func (a *Authenticator) verifyAndBuildUser(tokens *tokenSet) (*User, error) {

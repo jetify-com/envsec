@@ -13,6 +13,7 @@ import (
 	"go.jetpack.io/envsec/internal/auth"
 	"go.jetpack.io/envsec/internal/awsfed"
 	"go.jetpack.io/envsec/internal/jetcloud"
+	"go.jetpack.io/envsec/internal/typeids"
 )
 
 // to be composed into xyzCmdFlags structs
@@ -45,7 +46,7 @@ func (f *configFlags) register(cmd *cobra.Command) {
 	)
 }
 
-func (f *configFlags) validateProjectID() (string, error) {
+func (f *configFlags) validateProjectID(orgID typeids.OrganizationID) (string, error) {
 	if f.projectId != "" {
 		return f.projectId, nil
 	}
@@ -53,7 +54,7 @@ func (f *configFlags) validateProjectID() (string, error) {
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	id, err := jetcloud.ProjectID(wd)
+	config, err := jetcloud.ProjectConfig(wd)
 	if errors.Is(err, os.ErrNotExist) {
 		return "", errors.Errorf(
 			"Project ID not specified. You must run `envsec init` or specify --project-id in this directory",
@@ -61,7 +62,17 @@ func (f *configFlags) validateProjectID() (string, error) {
 	} else if err != nil {
 		return "", errors.WithStack(err)
 	}
-	return id.String(), nil
+
+	if config.OrgID != orgID {
+		// Validate that the project ID belongs to the org ID
+		return "", errors.Errorf(
+			"Project ID %s does not belong to organization %s",
+			config.ProjectID,
+			orgID,
+		)
+	}
+
+	return config.ProjectID.String(), nil
 }
 
 type cmdConfig struct {
@@ -93,11 +104,16 @@ func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
 		return nil, errors.WithStack(err)
 	}
 
+	var orgID typeids.OrganizationID
 	if user != nil && f.orgId == "" {
-		f.orgId = user.OrgID()
+		orgID, err = user.OrgID()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		f.orgId = orgID.String()
 	}
 
-	projectID, err := f.validateProjectID()
+	projectID, err := f.validateProjectID(orgID)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

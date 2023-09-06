@@ -8,31 +8,33 @@ import (
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/envsec/internal/auth"
+	"go.jetpack.io/envsec/internal/typeids"
 )
 
 const dirName = ".jetpack"
 const configName = "envsec.json"
 
 type projectConfig struct {
-	ID projectID `json:"id"`
+	ProjectID typeids.ProjectID      `json:"project_id"`
+	OrgID     typeids.OrganizationID `json:"org_id"`
 }
 
-func InitProject(ctx context.Context, user *auth.User, wd string) (projectID, error) {
+func InitProject(ctx context.Context, user *auth.User, wd string) (typeids.ProjectID, error) {
 	existing, err := ProjectID(wd)
 	if err == nil {
-		return nilProjectID,
+		return typeids.NilProjectID,
 			errors.Errorf("already initialized with project ID: %s", existing)
 	} else if !os.IsNotExist(err) {
-		return nilProjectID, err
+		return typeids.NilProjectID, err
 	}
 
 	dirPath := filepath.Join(wd, dirName)
 	if err = os.MkdirAll(dirPath, 0700); err != nil {
-		return nilProjectID, err
+		return typeids.NilProjectID, err
 	}
 
 	if err = createGitIgnore(wd); err != nil {
-		return nilProjectID, err
+		return typeids.NilProjectID, err
 	}
 
 	repoURL, _ := gitRepoURL(wd)
@@ -40,25 +42,38 @@ func InitProject(ctx context.Context, user *auth.User, wd string) (projectID, er
 
 	projectID, err := newClient().newProjectID(ctx, user, repoURL, subdir)
 	if err != nil {
-		return nilProjectID, err
+		return typeids.NilProjectID, err
 	}
 
-	cfg := projectConfig{ID: projectID}
+	orgID, err := user.OrgID()
+	if err != nil {
+		return typeids.NilProjectID, err
+	}
+
+	cfg := projectConfig{ProjectID: projectID, OrgID: orgID}
 	data, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
-		return nilProjectID, err
+		return typeids.NilProjectID, err
 	}
 	return projectID, os.WriteFile(filepath.Join(dirPath, configName), data, 0600)
 }
 
-func ProjectID(wd string) (projectID, error) {
+func ProjectConfig(wd string) (*projectConfig, error) {
 	data, err := os.ReadFile(filepath.Join(wd, dirName, configName))
 	if err != nil {
-		return nilProjectID, err
+		return nil, err
 	}
 	var cfg projectConfig
 	if err := json.Unmarshal(data, &cfg); err != nil {
-		return nilProjectID, err
+		return nil, err
 	}
-	return cfg.ID, nil
+	return &cfg, nil
+}
+
+func ProjectID(wd string) (typeids.ProjectID, error) {
+	cfg, err := ProjectConfig(wd)
+	if err != nil {
+		return typeids.NilProjectID, err
+	}
+	return cfg.ProjectID, nil
 }

@@ -12,21 +12,9 @@ import (
 
 	"go.jetpack.io/envsec/internal/auth"
 	"go.jetpack.io/envsec/internal/envvar"
-	typeid "go.jetpack.io/typeid/typed"
+	"go.jetpack.io/envsec/internal/typeids"
 	"golang.org/x/oauth2"
 )
-
-type projectPrefix struct{}
-
-func (projectPrefix) Type() string { return "proj" }
-
-type projectID struct{ typeid.TypeID[projectPrefix] }
-
-var nilProjectID = projectID{typeid.Nil[projectPrefix]()}
-
-type project struct {
-	ID projectID `json:"id"`
-}
 
 type client struct {
 	apiHost string
@@ -49,15 +37,17 @@ func (c *client) endpoint(path string) string {
 	return endpointURL
 }
 
-func (c *client) newProjectID(ctx context.Context, user *auth.User, repo, subdir string) (projectID, error) {
+func (c *client) newProjectID(ctx context.Context, user *auth.User, repo, subdir string) (typeids.ProjectID, error) {
 	fmt.Fprintf(os.Stderr, "Creating new project for repo=%s subdir=%s\n", repo, subdir)
 
-	p, err := post[project](ctx, c, user, map[string]string{
+	p, err := post[struct {
+		ID typeids.ProjectID `json:"id"`
+	}](ctx, c, user, map[string]string{
 		"repo_url": repo,
 		"subdir":   subdir,
 	})
 	if err != nil {
-		return nilProjectID, err
+		return typeids.NilProjectID, err
 	}
 
 	return p.ID, nil
