@@ -21,7 +21,7 @@ func (a *Authenticator) fetchJWKSWithCache() (*keyfunc.JWKS, error) {
 	if err != nil {
 		baseDir = "~/.cache"
 	}
-	// example ~/.cache/jetpack/accounts.jetpack.io.jwks.json
+	// example ~/.cache/jetpack/example.com.jwks.json
 	cacheDir := filepath.Join(baseDir, dirName)
 	path := filepath.Join(cacheDir, fileName)
 

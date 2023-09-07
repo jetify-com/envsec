@@ -3,6 +3,7 @@ package awsfed
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
@@ -16,6 +17,7 @@ const cacheKey = "awsfed"
 type AWSFed struct {
 	AccountId      string
 	IdentityPoolId string
+	LegacyProvider string
 	Provider       string
 	Region         string
 }
@@ -24,6 +26,7 @@ func New() *AWSFed {
 	return &AWSFed{
 		AccountId:      "984256416385",
 		IdentityPoolId: "us-west-2:8111c156-085b-4ac5-b94d-f823205f6261",
+		LegacyProvider: "auth.jetpack.io",
 		Provider: envvar.Get(
 			"ENVSEC_AUTH_DOMAIN",
 			"accounts.jetpack.io",
@@ -48,7 +51,13 @@ func (a *AWSFed) AWSCreds(
 		Region: a.Region,
 	})
 
-	logins := map[string]string{a.Provider: token.Raw}
+	logins := map[string]string{}
+	if iss, _ := token.Claims.GetIssuer(); iss == fmt.Sprintf("https://%s/", a.LegacyProvider) {
+		logins[a.LegacyProvider] = token.Raw
+	} else {
+		logins[a.Provider] = token.Raw
+	}
+
 	getIdoutput, err := svc.GetId(
 		ctx,
 		&cognitoidentity.GetIdInput{

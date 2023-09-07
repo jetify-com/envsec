@@ -17,6 +17,8 @@ var orgIDClaim = envvar.Get(
 	"org_id",
 )
 
+const legacyOrgIDClaim = "https://auth.jetpack.io/org_id"
+
 var ErrNotLoggedIn = errors.New("not logged in")
 var ErrNoOrgID = errors.New("no org ID")
 
@@ -82,6 +84,9 @@ func (u *User) OrgID() (typeids.OrganizationID, error) {
 		return typeids.NilOrganizationID, ErrNotLoggedIn
 	}
 	id, ok := u.AccessToken.Claims.(jwt.MapClaims)[orgIDClaim].(string)
+	if !ok {
+		id, ok = u.AccessToken.Claims.(jwt.MapClaims)[legacyOrgIDClaim].(string)
+	}
 	if !ok {
 		return typeids.NilOrganizationID, ErrNoOrgID
 	}
