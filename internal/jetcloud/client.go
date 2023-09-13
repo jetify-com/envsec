@@ -24,7 +24,7 @@ func newClient() *client {
 	return &client{
 		apiHost: envvar.Get(
 			"ENVSEC_API_HOST",
-			"https://envsec-server-web-prod.cloud.jetpack.dev/",
+			"https://envsec-service-prod.cloud.jetpack.dev",
 		),
 	}
 }
