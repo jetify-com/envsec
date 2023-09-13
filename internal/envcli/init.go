@@ -14,17 +14,18 @@ func initCmd() *cobra.Command {
 		Short: "initialize directory and envsec project",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			user, err := newAuthenticator().GetUser()
+			client, err := newAuthClient()
 			if err != nil {
 				return err
 			}
+			tok := client.GetSession()
 
 			wd, err := os.Getwd()
 			if err != nil {
 				return err
 			}
 
-			projectID, err := jetcloud.InitProject(cmd.Context(), user, wd)
+			projectID, err := jetcloud.InitProject(cmd.Context(), tok, wd)
 			if err != nil {
 				return err
 			}

@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
-	"github.com/golang-jwt/jwt/v5"
+	"go.jetpack.io/auth/session"
 	"go.jetpack.io/envsec/internal/envvar"
 	"go.jetpack.io/envsec/internal/filecache"
 )
@@ -37,7 +37,7 @@ func New() *AWSFed {
 
 func (a *AWSFed) AWSCreds(
 	ctx context.Context,
-	token *jwt.Token,
+	tok *session.Token,
 ) (*types.Credentials, error) {
 	cache := filecache.New("envsec")
 	if cachedCreds, err := cache.Get(cacheKey); err == nil {
@@ -52,10 +52,12 @@ func (a *AWSFed) AWSCreds(
 	})
 
 	logins := map[string]string{}
-	if iss, _ := token.Claims.GetIssuer(); iss == fmt.Sprintf("https://%s/", a.LegacyProvider) {
-		logins[a.LegacyProvider] = token.Raw
+	if tok.IDClaims() == nil {
+		// skip
+	} else if tok.IDClaims().Issuer == fmt.Sprintf("https://%s/", a.LegacyProvider) {
+		logins[a.LegacyProvider] = tok.IDToken
 	} else {
-		logins[a.Provider] = token.Raw
+		logins[a.Provider] = tok.IDToken
 	}
 
 	getIdoutput, err := svc.GetId(

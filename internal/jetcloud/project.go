@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/envsec/internal/auth"
+	"go.jetpack.io/auth/session"
 	"go.jetpack.io/envsec/internal/typeids"
 )
 
@@ -19,7 +19,7 @@ type projectConfig struct {
 	OrgID     typeids.OrganizationID `json:"org_id"`
 }
 
-func InitProject(ctx context.Context, user *auth.User, wd string) (typeids.ProjectID, error) {
+func InitProject(ctx context.Context, tok *session.Token, wd string) (typeids.ProjectID, error) {
 	existing, err := ProjectID(wd)
 	if err == nil {
 		return typeids.NilProjectID,
@@ -40,12 +40,17 @@ func InitProject(ctx context.Context, user *auth.User, wd string) (typeids.Proje
 	repoURL, _ := gitRepoURL(wd)
 	subdir, _ := gitSubdirectory(wd)
 
-	projectID, err := newClient().newProjectID(ctx, user, repoURL, subdir)
+	projectID, err := newClient().newProjectID(ctx, tok, repoURL, subdir)
 	if err != nil {
 		return typeids.NilProjectID, err
 	}
 
-	orgID, err := user.OrgID()
+	claims := tok.IDClaims()
+	if claims == nil {
+		return typeids.NilProjectID, errors.Errorf("token did not contain an org")
+	}
+
+	orgID, err := typeids.OrganizationIDFromString(tok.IDClaims().OrgID)
 	if err != nil {
 		return typeids.NilProjectID, err
 	}

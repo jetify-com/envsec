@@ -9,8 +9,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"go.jetpack.io/auth/session"
 	"go.jetpack.io/envsec"
-	"go.jetpack.io/envsec/internal/auth"
 	"go.jetpack.io/envsec/internal/awsfed"
 	"go.jetpack.io/envsec/internal/jetcloud"
 	"go.jetpack.io/envsec/internal/typeids"
@@ -81,20 +81,24 @@ type cmdConfig struct {
 }
 
 func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
-	var user *auth.User
-	var err error
+	var tok *session.Token
+
 	if f.orgId == "" {
-		user, err = newAuthenticator().GetUser()
-		if errors.Is(err, auth.ErrNotLoggedIn) {
+		client, err := newAuthClient()
+		if err != nil {
+			return nil, err
+		}
+
+		tok := client.GetSession()
+		if tok == nil {
 			return nil, errors.Errorf(
 				"To use envsec you must log in (`envsec auth login`) or specify --project-id and --org-id",
 			)
-		} else if err != nil {
-			return nil, errors.WithStack(err)
 		}
+
 	}
 
-	ssmConfig, err := genSSMConfigForUser(ctx, user)
+	ssmConfig, err := genSSMConfigForUser(ctx, tok)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -105,12 +109,8 @@ func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
 	}
 
 	var orgID typeids.OrganizationID
-	if user != nil && f.orgId == "" {
-		orgID, err = user.OrgID()
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		f.orgId = orgID.String()
+	if tok != nil && f.orgId == "" {
+		f.orgId = tok.IDClaims().OrgID
 	}
 
 	projectID, err := f.validateProjectID(orgID)
@@ -131,13 +131,13 @@ func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
 
 func genSSMConfigForUser(
 	ctx context.Context,
-	user *auth.User,
+	tok *session.Token,
 ) (*envsec.SSMConfig, error) {
-	if user == nil {
+	if tok == nil {
 		return &envsec.SSMConfig{}, nil
 	}
 	fed := awsfed.New()
-	creds, err := fed.AWSCreds(ctx, user.AccessToken)
+	creds, err := fed.AWSCreds(ctx, tok)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

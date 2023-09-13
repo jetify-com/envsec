@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"go.jetpack.io/envsec/internal/auth"
+	"go.jetpack.io/auth"
 	"go.jetpack.io/envsec/internal/envvar"
 )
 
@@ -31,10 +31,16 @@ func loginCmd() *cobra.Command {
 		Short: "Login to envsec",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return newAuthenticator().DeviceAuthFlow(
-				cmd.Context(),
-				cmd.OutOrStdout(),
-			)
+			client, err := newAuthClient()
+			if err != nil {
+				return err
+			}
+
+			_, err = client.LoginFlow()
+			if err == nil {
+				fmt.Fprintln(cmd.OutOrStdout(), "Logged in successfully")
+			}
+			return err
 		},
 	}
 
@@ -47,7 +53,12 @@ func logoutCmd() *cobra.Command {
 		Short: "logout from envsec",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := newAuthenticator().Logout()
+			client, err := newAuthClient()
+			if err != nil {
+				return err
+			}
+
+			err = client.LogoutFlow()
 			if err == nil {
 				fmt.Fprintln(cmd.OutOrStdout(), "Logged out successfully")
 			}
@@ -66,8 +77,13 @@ func refreshCmd() *cobra.Command {
 		Args:   cobra.ExactArgs(0),
 		Hidden: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_, err := newAuthenticator().RefreshTokens()
-			return err
+			client, err := newAuthClient()
+			if err != nil {
+				return err
+			}
+
+			_ = client.RefreshSession()
+			return nil
 		},
 	}
 
@@ -80,11 +96,33 @@ func whoAmICmd() *cobra.Command {
 		Short: "Show the current user",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			user, err := newAuthenticator().GetUser()
+			client, err := newAuthClient()
 			if err != nil {
 				return err
 			}
-			fmt.Fprintln(cmd.OutOrStdout(), user)
+
+			tok := client.GetSession()
+			if tok == nil {
+				fmt.Fprintln(cmd.OutOrStdout(), "Not logged in")
+				return nil
+			}
+			idClaims := tok.IDClaims()
+
+			fmt.Fprintf(cmd.OutOrStdout(), "Logged in\n")
+			fmt.Fprintf(cmd.OutOrStdout(), "User ID: %s\n", idClaims.Subject)
+
+			if idClaims.OrgID != "" {
+				fmt.Fprintf(cmd.OutOrStdout(), "Org ID: %s\n", idClaims.OrgID)
+			}
+
+			if idClaims.Email != "" {
+				fmt.Fprintf(cmd.OutOrStdout(), "Email: %s\n", idClaims.Email)
+			}
+
+			if idClaims.Name != "" {
+				fmt.Fprintf(cmd.OutOrStdout(), "Name: %s\n", idClaims.Name)
+			}
+
 			return nil
 		},
 	}
@@ -92,25 +130,11 @@ func whoAmICmd() *cobra.Command {
 	return cmd
 }
 
-func newAuthenticator() *auth.Authenticator {
-	return &auth.Authenticator{
-		AppName:         "envsec",
-		AuthCommandHint: "devbox auth login",
-		ClientID: envvar.Get(
-			"ENVSEC_AUTH_CLIENT_ID",
-			"5PusB4fMm6BQ8WbTFObkTI0JUDi9ahPC",
-		),
-		Domain: envvar.Get(
-			"ENVSEC_AUTH_DOMAIN",
-			"auth.jetpack.io",
-		),
-		Scope: envvar.Get(
-			"ENVSEC_AUTH_SCOPE",
-			"openid offline_access email profile",
-		),
-		Audience: envvar.Get(
-			"ENVSEC_AUTH_AUDIENCE",
-			"https://api.jetpack.io",
-		),
-	}
+func newAuthClient() (*auth.Client, error) {
+	issuer := envvar.Get("ENVSEC_ISSUER", "https://accounts.jetpack.io")
+	clientId := envvar.Get("ENVSEC_CLIENT_ID", "ff3d4c9c-1ac8-42d9-bef1-f5218bb1a9f6")
+	// TODO: Consider making scopes and audience configurable:
+	// "ENVSEC_AUTH_SCOPE" = "openid offline_access email profile"
+	// "ENVSEC_AUTH_AUDIENCE" = "https://api.jetpack.io",
+	return auth.NewClient(issuer, clientId)
 }

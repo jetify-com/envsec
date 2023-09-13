@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"os"
 
-	"go.jetpack.io/envsec/internal/auth"
+	"go.jetpack.io/auth/session"
 	"go.jetpack.io/envsec/internal/envvar"
 	"go.jetpack.io/envsec/internal/typeids"
 	"golang.org/x/oauth2"
@@ -37,12 +37,12 @@ func (c *client) endpoint(path string) string {
 	return endpointURL
 }
 
-func (c *client) newProjectID(ctx context.Context, user *auth.User, repo, subdir string) (typeids.ProjectID, error) {
+func (c *client) newProjectID(ctx context.Context, tok *session.Token, repo, subdir string) (typeids.ProjectID, error) {
 	fmt.Fprintf(os.Stderr, "Creating new project for repo=%s subdir=%s\n", repo, subdir)
 
 	p, err := post[struct {
 		ID typeids.ProjectID `json:"id"`
-	}](ctx, c, user, map[string]string{
+	}](ctx, c, tok, map[string]string{
 		"repo_url": repo,
 		"subdir":   subdir,
 	})
@@ -53,15 +53,13 @@ func (c *client) newProjectID(ctx context.Context, user *auth.User, repo, subdir
 	return p.ID, nil
 }
 
-func post[T any](ctx context.Context, c *client, user *auth.User, data any) (*T, error) {
+func post[T any](ctx context.Context, c *client, tok *session.Token, data any) (*T, error) {
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
 		return nil, err
 	}
 
-	src := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: user.AccessToken.Raw},
-	)
+	src := oauth2.StaticTokenSource(&tok.Token)
 	httpClient := oauth2.NewClient(ctx, src)
 
 	req, err := http.NewRequest(
