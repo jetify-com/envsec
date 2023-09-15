@@ -9,11 +9,11 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/auth/session"
 	"go.jetpack.io/envsec"
 	"go.jetpack.io/envsec/internal/awsfed"
 	"go.jetpack.io/envsec/internal/jetcloud"
 	"go.jetpack.io/envsec/internal/typeids"
+	"go.jetpack.io/pkg/sandbox/auth/session"
 )
 
 // to be composed into xyzCmdFlags structs

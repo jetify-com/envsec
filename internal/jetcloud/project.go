@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/auth/session"
 	"go.jetpack.io/envsec/internal/typeids"
+	"go.jetpack.io/pkg/sandbox/auth/session"
 )
 
 const dirName = ".jetpack"
