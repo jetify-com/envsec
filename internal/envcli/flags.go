@@ -71,7 +71,6 @@ func (f *configFlags) validateProjectID(orgID typeids.OrganizationID) (string, e
 			orgID,
 		)
 	}
-
 	return config.ProjectID.String(), nil
 }
 
@@ -82,6 +81,7 @@ type cmdConfig struct {
 
 func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
 	var tok *session.Token
+	var err error
 
 	if f.orgId == "" {
 		client, err := newAuthClient()
@@ -89,13 +89,12 @@ func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
 			return nil, err
 		}
 
-		tok := client.GetSession()
+		tok = client.GetSession()
 		if tok == nil {
 			return nil, errors.Errorf(
 				"To use envsec you must log in (`envsec auth login`) or specify --project-id and --org-id",
 			)
 		}
-
 	}
 
 	ssmConfig, err := genSSMConfigForUser(ctx, tok)
@@ -108,9 +107,13 @@ func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	var orgID typeids.OrganizationID
 	if tok != nil && f.orgId == "" {
 		f.orgId = tok.IDClaims().OrgID
+	}
+
+	orgID, err := typeids.OrganizationIDFromString(f.orgId)
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
 
 	projectID, err := f.validateProjectID(orgID)

@@ -79,7 +79,7 @@ func Execute(ctx context.Context) int {
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		} else {
-			fmt.Println(string(b))
+			fmt.Fprintln(os.Stderr, string(b))
 		}
 	} else {
 		fmt.Fprintln(os.Stderr, err)
