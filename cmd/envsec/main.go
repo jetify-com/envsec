@@ -5,10 +5,11 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"go.jetpack.io/envsec/internal/envcli"
 )
 
 func main() {
-	envcli.Execute(context.Background())
+	os.Exit(envcli.Execute(context.Background()))
 }

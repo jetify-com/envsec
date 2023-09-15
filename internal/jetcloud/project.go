@@ -20,6 +20,9 @@ type projectConfig struct {
 }
 
 func InitProject(ctx context.Context, tok *session.Token, wd string) (typeids.ProjectID, error) {
+	if tok == nil {
+		return typeids.NilProjectID, errors.Errorf("Please login first")
+	}
 	existing, err := ProjectID(wd)
 	if err == nil {
 		return typeids.NilProjectID,

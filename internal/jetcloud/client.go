@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 
 	"go.jetpack.io/auth/session"
 	"go.jetpack.io/envsec/internal/envvar"
@@ -38,8 +37,6 @@ func (c *client) endpoint(path string) string {
 }
 
 func (c *client) newProjectID(ctx context.Context, tok *session.Token, repo, subdir string) (typeids.ProjectID, error) {
-	fmt.Fprintf(os.Stderr, "Creating new project for repo=%s subdir=%s\n", repo, subdir)
-
 	p, err := post[struct {
 		ID typeids.ProjectID `json:"id"`
 	}](ctx, c, tok, map[string]string{
