@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/envsec/internal/jetcloud"
 )
@@ -26,10 +27,17 @@ func initCmd() *cobra.Command {
 			}
 
 			projectID, err := jetcloud.InitProject(cmd.Context(), tok, wd)
-			if err != nil {
+			if errors.Is(err, jetcloud.ErrProjectAlreadyInitialized) {
+				fmt.Fprintf(
+					cmd.ErrOrStderr(),
+					"Warning: project already initialized ID=%s\n",
+					projectID,
+				)
+			} else if err != nil {
 				return err
+			} else {
+				fmt.Fprintf(cmd.ErrOrStderr(), "Initialized project ID=%s\n", projectID)
 			}
-			fmt.Fprintf(cmd.ErrOrStderr(), "Initialized project ID=%s\n", projectID)
 			return nil
 		},
 	}

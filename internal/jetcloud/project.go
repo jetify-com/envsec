@@ -11,6 +11,8 @@ import (
 	"go.jetpack.io/pkg/sandbox/auth/session"
 )
 
+var ErrProjectAlreadyInitialized = errors.New("project already initialized")
+
 const dirName = ".jetpack"
 const configName = "envsec.json"
 
@@ -25,8 +27,7 @@ func InitProject(ctx context.Context, tok *session.Token, wd string) (typeids.Pr
 	}
 	existing, err := ProjectID(wd)
 	if err == nil {
-		return typeids.NilProjectID,
-			errors.Errorf("already initialized with project ID: %s", existing)
+		return existing, ErrProjectAlreadyInitialized
 	} else if !os.IsNotExist(err) {
 		return typeids.NilProjectID, err
 	}
