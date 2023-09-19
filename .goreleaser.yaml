@@ -1,0 +1,48 @@
+project_name: envsec
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: ./cmd/envsec/main.go
+    binary: envsec
+    flags:
+      - -trimpath
+    mod_timestamp: "{{ .CommitTimestamp }}" # For reproducible builds
+    ldflags:
+      - -s -w # Strip debug symbols
+    env:
+      - CGO_ENABLED=0
+      - GO111MODULE=on
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - "386"
+      - amd64
+      - arm
+      - arm64
+    ignore:
+      - goos: darwin
+        goarch: "386"
+
+archives:
+  - files:
+      - no-files-will-match-* # Glob that does not match to create archive with only binaries.
+    name_template: "{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+release:
+  prerelease: auto
+  draft: true
+  github:
+    owner: jetpack-io
+    name: envsec
+
+snapshot:
+  name_template: "{{ .Tag }}-devel"
