@@ -39,7 +39,7 @@ func downloadCmd() *cobra.Command {
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			envVars, err := cmdCfg.Store.List(cmd.Context(), cmdCfg.EnvId)
+			envVars, err := cmdCfg.Store.List(cmd.Context(), cmdCfg.EnvID)
 			if err != nil {
 				return errors.WithStack(err)
 			}
@@ -47,7 +47,7 @@ func downloadCmd() *cobra.Command {
 			if len(envVars) == 0 {
 				err = tux.WriteHeader(cmd.OutOrStdout(),
 					"[DONE] There are no environment variables to download for environment: %s\n",
-					strings.ToLower(cmdCfg.EnvId.EnvName),
+					strings.ToLower(cmdCfg.EnvID.EnvName),
 				)
 				return errors.WithStack(err)
 			}
@@ -82,7 +82,7 @@ func downloadCmd() *cobra.Command {
 			err = tux.WriteHeader(cmd.OutOrStdout(),
 				"[DONE] Downloaded environment variables to %v for environment: %s\n",
 				strings.Join(tux.QuotedTerms(args), ", "),
-				strings.ToLower(cmdCfg.EnvId.EnvName),
+				strings.ToLower(cmdCfg.EnvID.EnvName),
 			)
 			if err != nil {
 				return errors.WithStack(err)

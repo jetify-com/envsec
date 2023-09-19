@@ -28,13 +28,13 @@ func removeCmd() *cobra.Command {
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			err = cmdCfg.Store.DeleteAll(cmd.Context(), cmdCfg.EnvId, envNames)
+			err = cmdCfg.Store.DeleteAll(cmd.Context(), cmdCfg.EnvID, envNames)
 			if err == nil {
 				err = tux.WriteHeader(cmd.OutOrStdout(),
 					"[DONE] Deleted environment %s %v in environment: %s\n",
 					tux.Plural(envNames, "variable", "variables"),
 					strings.Join(tux.QuotedTerms(envNames), ", "),
-					strings.ToLower(cmdCfg.EnvId.EnvName),
+					strings.ToLower(cmdCfg.EnvID.EnvName),
 				)
 			}
 			if errors.Is(err, envsec.FaultyParamError) {
@@ -42,7 +42,7 @@ func removeCmd() *cobra.Command {
 					"[CANCELLED] Could not delete variable '%v' in environment: %s.\n"+
 						"Please make sure all listed variables exist and you have proper permission to remove them.\n",
 					strings.Split(err.Error(), ":")[0],
-					strings.ToLower(cmdCfg.EnvId.EnvName),
+					strings.ToLower(cmdCfg.EnvID.EnvName),
 				)
 			}
 			if err != nil {

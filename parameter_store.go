@@ -50,9 +50,9 @@ func newParameterStore(ctx context.Context, config *SSMConfig) (*parameterStore,
 			o.Region = config.Region
 		}
 
-		if (config.AccessKeyId != "" && config.SecretAccessKey != "") || config.SessionToken != "" {
+		if (config.AccessKeyID != "" && config.SecretAccessKey != "") || config.SessionToken != "" {
 			o.Credentials = credentials.NewStaticCredentialsProvider(
-				config.AccessKeyId,
+				config.AccessKeyID,
 				config.SecretAccessKey,
 				config.SessionToken,
 			)
@@ -67,23 +67,23 @@ func newParameterStore(ctx context.Context, config *SSMConfig) (*parameterStore,
 
 // Defines a new stored parameter.
 // parameter values are limited in size to 4 KB.
-func (s *parameterStore) newParameter(ctx context.Context, v *parameter, value string) error {
+func (s *parameterStore) newParameter(ctx context.Context, param *parameter, value string) error {
 	if parameterValueMaxLength < len(value) {
 		return errors.New("parameter values are limited in size to 4KB")
 	}
 
 	input := &ssm.PutParameterInput{
-		Name:        aws.String(v.id),
-		Description: aws.String(v.description),
+		Name:        aws.String(param.id),
+		Description: aws.String(param.description),
 		Type:        types.ParameterTypeSecureString,
 		Value:       awsSSMParamStoreValue(value),
-		Tags:        v.tags,
+		Tags:        param.tags,
 	}
 
 	// Set the KmsKeyId only when it is present. Otherwise, aws sdk uses the default KMS key
 	// since we specify "SecureString" type.
-	if s.config.KmsKeyId != "" {
-		input.KeyId = aws.String(s.config.KmsKeyId)
+	if s.config.KmsKeyID != "" {
+		input.KeyId = aws.String(s.config.KmsKeyID)
 	}
 
 	_, err := s.client.PutParameter(ctx, input)
@@ -91,7 +91,7 @@ func (s *parameterStore) newParameter(ctx context.Context, v *parameter, value s
 		var paeError *types.ParameterAlreadyExists
 		if errors.As(err, &paeError) {
 			// parameter already exists calling put parameter with overwrite flag
-			return s.overwriteParameterValue(ctx, v, value)
+			return s.overwriteParameterValue(ctx, param, value)
 		}
 		return errors.WithStack(err)
 	}
@@ -111,7 +111,7 @@ func (s *parameterStore) overwriteParameterValue(ctx context.Context, v *paramet
 	return errors.WithStack(err)
 }
 
-func (s *parameterStore) listByPath(ctx context.Context, id EnvId) ([]EnvVar, error) {
+func (s *parameterStore) listByPath(ctx context.Context, id EnvID) ([]EnvVar, error) {
 	// Create the request object:
 	req := &ssm.GetParametersByPathInput{
 		Path:           aws.String(s.config.varPath(id, "")),
@@ -145,10 +145,10 @@ func (s *parameterStore) listByPath(ctx context.Context, id EnvId) ([]EnvVar, er
 	return results, nil
 }
 
-func (s *parameterStore) listByTags(ctx context.Context, envId EnvId) ([]EnvVar, error) {
+func (s *parameterStore) listByTags(ctx context.Context, envID EnvID) ([]EnvVar, error) {
 	// Create the request object:
 	req := &ssm.DescribeParametersInput{
-		ParameterFilters: s.buildFilters(envId),
+		ParameterFilters: s.buildFilters(envID),
 	}
 
 	varNames := []string{}
@@ -168,44 +168,44 @@ func (s *parameterStore) listByTags(ctx context.Context, envId EnvId) ([]EnvVar,
 		}
 	}
 
-	return s.getAll(ctx, envId, varNames)
+	return s.getAll(ctx, envID, varNames)
 }
 
-func (s *parameterStore) buildFilters(envId EnvId) []types.ParameterStringFilter {
+func (s *parameterStore) buildFilters(envID EnvID) []types.ParameterStringFilter {
 	filters := []types.ParameterStringFilter{
 		{
 			Key:    lo.ToPtr("Path"),
 			Option: lo.ToPtr("Recursive"),
-			Values: []string{s.config.pathNamespace(envId)},
+			Values: []string{s.config.pathNamespace(envID)},
 		},
 	}
-	if envId.ProjectId != "" {
+	if envID.ProjectID != "" {
 		filters = append(filters, types.ParameterStringFilter{
 			Key:    lo.ToPtr("tag:project-id"),
-			Values: []string{envId.ProjectId},
+			Values: []string{envID.ProjectID},
 		})
 	}
-	if envId.OrgId != "" {
+	if envID.OrgID != "" {
 		filters = append(filters, types.ParameterStringFilter{
 			Key:    lo.ToPtr("tag:org-id"),
-			Values: []string{envId.OrgId},
+			Values: []string{envID.OrgID},
 		})
 	}
-	if envId.EnvName != "" {
+	if envID.EnvName != "" {
 		filters = append(filters, types.ParameterStringFilter{
 			Key:    lo.ToPtr("tag:env-name"),
-			Values: []string{envId.EnvName},
+			Values: []string{envID.EnvName},
 		})
 	}
 
 	return filters
 }
 
-func (s *parameterStore) getAll(ctx context.Context, envId EnvId, varNames []string) ([]EnvVar, error) {
+func (s *parameterStore) getAll(ctx context.Context, envID EnvID, varNames []string) ([]EnvVar, error) {
 	// Start with empty results
 	results := []EnvVar{}
 	paths := lo.Map(varNames, func(name string, _ int) string {
-		return s.config.varPath(envId, name)
+		return s.config.varPath(envID, name)
 	})
 
 	// Due to AWS API limits, chunk into groups of 10
@@ -237,9 +237,9 @@ func (s *parameterStore) getAll(ctx context.Context, envId EnvId, varNames []str
 	return results, nil
 }
 
-func (s *parameterStore) deleteAll(ctx context.Context, envId EnvId, varNames []string) error {
+func (s *parameterStore) deleteAll(ctx context.Context, envID EnvID, varNames []string) error {
 	paths := lo.Map(varNames, func(name string, _ int) string {
-		return s.config.varPath(envId, name)
+		return s.config.varPath(envID, name)
 	})
 	// Due to AWS API limits, chunk into groups of 10
 	chunks := lo.Chunk(paths, 10)

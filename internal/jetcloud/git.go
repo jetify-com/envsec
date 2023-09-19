@@ -14,6 +14,7 @@ func createGitIgnore(wd string) error {
 
 func gitRepoURL(wd string) (string, error) {
 	cmd := exec.Command("git", "config", "--get", "remote.origin.url")
+	cmd.Dir = wd
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err
@@ -23,6 +24,7 @@ func gitRepoURL(wd string) (string, error) {
 
 func gitSubdirectory(wd string) (string, error) {
 	cmd := exec.Command("git", "rev-parse", "--show-prefix")
+	cmd.Dir = wd
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err

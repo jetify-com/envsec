@@ -37,22 +37,22 @@ func listCmd() *cobra.Command {
 			envNames := []string{"dev", "prod", "staging"}
 			// If a specific environment was set by the user, then just use that one.
 			if cmd.Flags().Changed(environmentFlagName) {
-				envNames = []string{strings.ToLower(cmdCfg.EnvId.EnvName)}
+				envNames = []string{strings.ToLower(cmdCfg.EnvID.EnvName)}
 			}
 
 			// TODO: parallelize
 			for _, envName := range envNames {
-				envId := envsec.EnvId{
-					OrgId:     cmdCfg.EnvId.OrgId,
-					ProjectId: cmdCfg.EnvId.ProjectId,
+				envID := envsec.EnvID{
+					OrgID:     cmdCfg.EnvID.OrgID,
+					ProjectID: cmdCfg.EnvID.ProjectID,
 					EnvName:   strings.ToLower(envName),
 				}
-				envVars, err := cmdCfg.Store.List(cmd.Context(), envId)
+				envVars, err := cmdCfg.Store.List(cmd.Context(), envID)
 				if err != nil {
 					return errors.WithStack(err)
 				}
 
-				err = printEnv(cmd, envId, envVars, flags.ShowValues, flags.Format)
+				err = printEnv(cmd, envID, envVars, flags.ShowValues, flags.Format)
 				if err != nil {
 					return errors.WithStack(err)
 				}

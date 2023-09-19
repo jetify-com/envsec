@@ -30,15 +30,15 @@ func newSSMStore(ctx context.Context, config *SSMConfig) (*SSMStore, error) {
 	return store, nil
 }
 
-func (s *SSMStore) List(ctx context.Context, envId EnvId) ([]EnvVar, error) {
+func (s *SSMStore) List(ctx context.Context, envID EnvID) ([]EnvVar, error) {
 	if s.store.config.hasDefaultPaths() {
-		return s.store.listByPath(ctx, envId)
+		return s.store.listByPath(ctx, envID)
 	}
-	return s.store.listByTags(ctx, envId)
+	return s.store.listByTags(ctx, envID)
 }
 
-func (s *SSMStore) Get(ctx context.Context, envId EnvId, name string) (string, error) {
-	vars, err := s.GetAll(ctx, envId, []string{name})
+func (s *SSMStore) Get(ctx context.Context, envID EnvID, name string) (string, error) {
+	vars, err := s.GetAll(ctx, envID, []string{name})
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -48,20 +48,20 @@ func (s *SSMStore) Get(ctx context.Context, envId EnvId, name string) (string, e
 	return vars[0].Value, nil
 }
 
-func (s *SSMStore) GetAll(ctx context.Context, envId EnvId, names []string) ([]EnvVar, error) {
-	return s.store.getAll(ctx, envId, names)
+func (s *SSMStore) GetAll(ctx context.Context, envID EnvID, names []string) ([]EnvVar, error) {
+	return s.store.getAll(ctx, envID, names)
 }
 
 func (s *SSMStore) Set(
 	ctx context.Context,
-	envId EnvId,
+	envID EnvID,
 	name string,
 	value string,
 ) error {
-	path := s.store.config.varPath(envId, name)
+	path := s.store.config.varPath(envID, name)
 
 	// New parameter definition
-	tags := buildTags(envId, name)
+	tags := buildTags(envID, name)
 	parameter := &parameter{
 		tags: tags,
 		id:   path,
@@ -69,14 +69,14 @@ func (s *SSMStore) Set(
 	return s.store.newParameter(ctx, parameter, value)
 }
 
-func (s *SSMStore) SetAll(ctx context.Context, envId EnvId, values map[string]string) error {
+func (s *SSMStore) SetAll(ctx context.Context, envID EnvID, values map[string]string) error {
 	// For now we implement by issuing multiple calls to Set()
 	// Make more efficient either by implementing a batch call to the underlying API, or
 	// by concurrently calling Set()
 
 	var multiErr error
 	for name, value := range values {
-		err := s.Set(ctx, envId, name, value)
+		err := s.Set(ctx, envID, name, value)
 		if err != nil {
 			multiErr = multierror.Append(multiErr, err)
 		}
@@ -84,32 +84,32 @@ func (s *SSMStore) SetAll(ctx context.Context, envId EnvId, values map[string]st
 	return multiErr
 }
 
-func (s *SSMStore) Delete(ctx context.Context, envId EnvId, name string) error {
-	return s.DeleteAll(ctx, envId, []string{name})
+func (s *SSMStore) Delete(ctx context.Context, envID EnvID, name string) error {
+	return s.DeleteAll(ctx, envID, []string{name})
 }
 
-func (s *SSMStore) DeleteAll(ctx context.Context, envId EnvId, names []string) error {
-	return s.store.deleteAll(ctx, envId, names)
+func (s *SSMStore) DeleteAll(ctx context.Context, envID EnvID, names []string) error {
+	return s.store.deleteAll(ctx, envID, names)
 }
 
-func buildTags(envId EnvId, varName string) []types.Tag {
+func buildTags(envID EnvID, varName string) []types.Tag {
 	tags := []types.Tag{}
-	if envId.ProjectId != "" {
+	if envID.ProjectID != "" {
 		tags = append(tags, types.Tag{
 			Key:   lo.ToPtr("project-id"),
-			Value: lo.ToPtr(envId.ProjectId),
+			Value: lo.ToPtr(envID.ProjectID),
 		})
 	}
-	if envId.OrgId != "" {
+	if envID.OrgID != "" {
 		tags = append(tags, types.Tag{
 			Key:   lo.ToPtr("org-id"),
-			Value: lo.ToPtr(envId.OrgId),
+			Value: lo.ToPtr(envID.OrgID),
 		})
 	}
-	if envId.EnvName != "" {
+	if envID.EnvName != "" {
 		tags = append(tags, types.Tag{
 			Key:   lo.ToPtr("env-name"),
-			Value: lo.ToPtr(envId.EnvName),
+			Value: lo.ToPtr(envID.EnvName),
 		})
 	}
 

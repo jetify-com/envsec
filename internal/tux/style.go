@@ -74,11 +74,10 @@ func getColor(token string, invertedToken string, tokens map[string]string) lipg
 
 	if invertedColor == "" {
 		return lipgloss.Color(color)
-	} else {
-		return lipgloss.AdaptiveColor{
-			Dark:  color,
-			Light: invertedColor,
-		}
+	}
+	return lipgloss.AdaptiveColor{
+		Dark:  color,
+		Light: invertedColor,
 	}
 }
 

@@ -10,45 +10,45 @@ import (
 	"github.com/pkg/errors"
 )
 
-const PATH_PREFIX = "/jetpack-data/env"
+const pathPrefix = "/jetpack-data/env"
 
 // Uniquely identifies an environment in which we store environment variables.
-type EnvId struct {
+type EnvID struct {
 	// A string that uniquely identifies the project to which the environment belongs.
-	ProjectId string
+	ProjectID string
 	// A string that uniquely identifies the organization to which the environment belongs.
-	OrgId string
+	OrgID string
 	// A name that uniquely identifies the environment within the project.
 	// Usually one of: 'dev', 'prod'.
 	EnvName string
 }
 
-func NewEnvId(projectId string, orgId string, envName string) (EnvId, error) {
-	if projectId == "" {
-		return EnvId{}, errors.New("ProjectId can not be empty")
+func NewEnvID(projectID string, orgID string, envName string) (EnvID, error) {
+	if projectID == "" {
+		return EnvID{}, errors.New("ProjectId can not be empty")
 	}
-	return EnvId{
-		ProjectId: projectId,
-		OrgId:     orgId,
+	return EnvID{
+		ProjectID: projectID,
+		OrgID:     orgID,
 		EnvName:   envName,
 	}, nil
 }
 
 type Store interface {
 	// List all environmnent variables and their values associated with the given envId.
-	List(ctx context.Context, envId EnvId) ([]EnvVar, error)
+	List(ctx context.Context, envID EnvID) ([]EnvVar, error)
 	// Set the value of an environment variable.
-	Set(ctx context.Context, envId EnvId, name string, value string) error
+	Set(ctx context.Context, envID EnvID, name string, value string) error
 	// Set the values of multiple environment variables.
-	SetAll(ctx context.Context, envId EnvId, values map[string]string) error
+	SetAll(ctx context.Context, envID EnvID, values map[string]string) error
 	// Get the value of an environment variable.
-	Get(ctx context.Context, envId EnvId, name string) (string, error)
+	Get(ctx context.Context, envID EnvID, name string) (string, error)
 	// Set the values of multiple environment variables.
-	GetAll(ctx context.Context, envId EnvId, names []string) ([]EnvVar, error)
+	GetAll(ctx context.Context, envID EnvID, names []string) ([]EnvVar, error)
 	// Delete an environment variable.
-	Delete(ctx context.Context, envId EnvId, name string) error
+	Delete(ctx context.Context, envID EnvID, name string) error
 	// Delete multiple environment variables.
-	DeleteAll(ctx context.Context, envId EnvId, names []string) error
+	DeleteAll(ctx context.Context, envID EnvID, names []string) error
 }
 
 type EnvVar struct {
@@ -71,13 +71,13 @@ type Config interface {
 
 type SSMConfig struct {
 	Region          string
-	AccessKeyId     string
+	AccessKeyID     string
 	SecretAccessKey string
 	SessionToken    string
-	KmsKeyId        string
+	KmsKeyID        string
 
-	VarPathFn       func(envId EnvId, varName string) string
-	PathNamespaceFn func(envId EnvId) string
+	VarPathFn       func(envId EnvID, varName string) string
+	PathNamespaceFn func(envId EnvID) string
 }
 
 // SSMStore implements interface Config (compile-time check)
@@ -87,23 +87,23 @@ func (c *SSMConfig) IsEnvStoreConfig() bool {
 	return true
 }
 
-func (c *SSMConfig) varPath(envId EnvId, varName string) string {
+func (c *SSMConfig) varPath(envID EnvID, varName string) string {
 	if c.VarPathFn != nil {
-		return c.VarPathFn(envId, varName)
+		return c.VarPathFn(envID, varName)
 	}
 	return path.Join(
-		c.pathNamespace(envId),
-		envId.ProjectId,
-		envId.EnvName,
+		c.pathNamespace(envID),
+		envID.ProjectID,
+		envID.EnvName,
 		varName,
 	)
 }
 
-func (c *SSMConfig) pathNamespace(envId EnvId) string {
+func (c *SSMConfig) pathNamespace(envID EnvID) string {
 	if c.PathNamespaceFn != nil {
-		return c.PathNamespaceFn(envId)
+		return c.PathNamespaceFn(envID)
 	}
-	return path.Join(PATH_PREFIX, envId.OrgId)
+	return path.Join(pathPrefix, envID.OrgID)
 }
 
 func (c *SSMConfig) hasDefaultPaths() bool {

@@ -37,15 +37,15 @@ func execCmd() *cobra.Command {
 			envNames := []string{"dev"}
 			// If a specific environment was set by the user, then just use that one.
 			if cmd.Flags().Changed(environmentFlagName) {
-				envNames = []string{strings.ToLower(cmdCfg.EnvId.EnvName)}
+				envNames = []string{strings.ToLower(cmdCfg.EnvID.EnvName)}
 			}
-			envId := envsec.EnvId{
-				OrgId:     cmdCfg.EnvId.OrgId,
-				ProjectId: cmdCfg.EnvId.ProjectId,
+			envID := envsec.EnvID{
+				OrgID:     cmdCfg.EnvID.OrgID,
+				ProjectID: cmdCfg.EnvID.ProjectID,
 				EnvName:   envNames[0],
 			}
 			// Get list of stored env variables
-			envVars, err := cmdCfg.Store.List(cmd.Context(), envId)
+			envVars, err := cmdCfg.Store.List(cmd.Context(), envID)
 			if err != nil {
 				return errors.WithStack(err)
 			}

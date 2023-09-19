@@ -23,13 +23,13 @@ const nameRegexStr = "^[a-zA-Z_][a-zA-Z0-9_]*"
 
 var nameRegex = regexp.MustCompile(nameRegexStr)
 
-func SetEnvMap(ctx context.Context, store envsec.Store, envId envsec.EnvId, envMap map[string]string) error {
+func SetEnvMap(ctx context.Context, store envsec.Store, envID envsec.EnvID, envMap map[string]string) error {
 	err := ensureValidNames(lo.Keys(envMap))
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	err = store.SetAll(ctx, envId, envMap)
+	err = store.SetAll(ctx, envID, envMap)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -61,7 +61,7 @@ func ensureValidNames(names []string) error {
 
 func printEnv(
 	cmd *cobra.Command,
-	envId envsec.EnvId,
+	envID envsec.EnvID,
 	envVars []envsec.EnvVar, // list of (name, value) pairs
 	flagPrintValues bool,
 	flagFormat string,
@@ -82,22 +82,22 @@ func printEnv(
 
 	switch flagFormat {
 	case "table":
-		return printTableFormat(cmd, envId, envVarsMaskedValue)
+		return printTableFormat(cmd, envID, envVarsMaskedValue)
 	case "dotenv":
-		return printDotenvFormat(cmd, envId, envVarsMaskedValue)
+		return printDotenvFormat(envVarsMaskedValue)
 	case "json":
-		return printJsonFormat(cmd, envId, envVarsMaskedValue)
+		return printJSONFormat(envVarsMaskedValue)
 	default:
-		return errors.New("Incorrect format. Must be one of table|dotenv|json .")
+		return errors.New("incorrect format. Must be one of table|dotenv|json")
 	}
 
 }
 
 func printTableFormat(cmd *cobra.Command,
-	envId envsec.EnvId,
+	envID envsec.EnvID,
 	envVars []envsec.EnvVar, // list of (name, value) pairs
 ) error {
-	err := tux.WriteHeader(cmd.OutOrStdout(), "Environment: %s\n", strings.ToLower(envId.EnvName))
+	err := tux.WriteHeader(cmd.OutOrStdout(), "Environment: %s\n", strings.ToLower(envID.EnvName))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -121,11 +121,7 @@ func printTableFormat(cmd *cobra.Command,
 	return nil
 }
 
-func printDotenvFormat(
-	cmd *cobra.Command,
-	envId envsec.EnvId,
-	envVars []envsec.EnvVar, // list of (name, value) pairs
-) error {
+func printDotenvFormat(envVars []envsec.EnvVar) error {
 	keyValsToPrint := ""
 	for _, envVar := range envVars {
 		keyValsToPrint += fmt.Sprintf("%s=%q\n", envVar.Name, envVar.Value)
@@ -137,11 +133,7 @@ func printDotenvFormat(
 	return nil
 }
 
-func printJsonFormat(
-	cmd *cobra.Command,
-	envId envsec.EnvId,
-	envVars []envsec.EnvVar, // list of (name, value) pairs
-) error {
+func printJSONFormat(envVars []envsec.EnvVar) error {
 	data, err := json.MarshalIndent(envVars, "", "  ")
 	if err != nil {
 		return err

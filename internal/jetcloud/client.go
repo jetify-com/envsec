@@ -50,7 +50,7 @@ func (c *client) newProjectID(ctx context.Context, tok *session.Token, repo, sub
 	return p.ID, nil
 }
 
-func post[T any](ctx context.Context, c *client, tok *session.Token, data any) (*T, error) {
+func post[T any](ctx context.Context, client *client, tok *session.Token, data any) (*T, error) {
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func post[T any](ctx context.Context, c *client, tok *session.Token, data any) (
 
 	req, err := http.NewRequest(
 		http.MethodPost,
-		c.endpoint("projects"),
+		client.endpoint("projects"),
 		bytes.NewBuffer(dataBytes),
 	)
 	if err != nil {

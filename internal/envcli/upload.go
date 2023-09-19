@@ -78,7 +78,7 @@ func uploadCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			err = SetEnvMap(cmd.Context(), cmdCfg.Store, cmdCfg.EnvId, envMap)
+			err = SetEnvMap(cmd.Context(), cmdCfg.Store, cmdCfg.EnvID, envMap)
 			if err != nil {
 				return errors.WithStack(err)
 			}
@@ -88,7 +88,7 @@ func uploadCmd() *cobra.Command {
 				len(envMap),
 				tux.Plural(relativeFilePaths, "file", "files"),
 				strings.Join(tux.QuotedTerms(relativeFilePaths), ", "),
-				strings.ToLower(cmdCfg.EnvId.EnvName),
+				strings.ToLower(cmdCfg.EnvID.EnvName),
 			)
 			if err != nil {
 				return errors.WithStack(err)
@@ -105,18 +105,18 @@ func uploadCmd() *cobra.Command {
 }
 
 func loadFromJSON(filePaths []string) (map[string]string, error) {
-	m := map[string]string{}
+	envMap := map[string]string{}
 	for _, filePath := range filePaths {
 		content, err := os.ReadFile(filePath)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		if err = json.Unmarshal(content, &m); err != nil {
+		if err = json.Unmarshal(content, &envMap); err != nil {
 			return nil, errors.WithStack(err)
 		}
-		for k, v := range m {
-			m[k] = v
+		for k, v := range envMap {
+			envMap[k] = v
 		}
 	}
-	return m, nil
+	return envMap, nil
 }

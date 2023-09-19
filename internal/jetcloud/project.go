@@ -21,28 +21,28 @@ type projectConfig struct {
 	OrgID     typeids.OrganizationID `json:"org_id"`
 }
 
-func InitProject(ctx context.Context, tok *session.Token, wd string) (typeids.ProjectID, error) {
+func InitProject(ctx context.Context, tok *session.Token, dir string) (typeids.ProjectID, error) {
 	if tok == nil {
 		return typeids.NilProjectID, errors.Errorf("Please login first")
 	}
-	existing, err := ProjectID(wd)
+	existing, err := ProjectID(dir)
 	if err == nil {
 		return existing, ErrProjectAlreadyInitialized
 	} else if !os.IsNotExist(err) {
 		return typeids.NilProjectID, err
 	}
 
-	dirPath := filepath.Join(wd, dirName)
+	dirPath := filepath.Join(dir, dirName)
 	if err = os.MkdirAll(dirPath, 0700); err != nil {
 		return typeids.NilProjectID, err
 	}
 
-	if err = createGitIgnore(wd); err != nil {
+	if err = createGitIgnore(dir); err != nil {
 		return typeids.NilProjectID, err
 	}
 
-	repoURL, _ := gitRepoURL(wd)
-	subdir, _ := gitSubdirectory(wd)
+	repoURL, _ := gitRepoURL(dir)
+	subdir, _ := gitSubdirectory(dir)
 
 	projectID, err := newClient().newProjectID(ctx, tok, repoURL, subdir)
 	if err != nil {

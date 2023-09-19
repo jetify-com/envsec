@@ -19,19 +19,16 @@ linters:
     - reassign
     - revive
     - staticcheck
-    # - stylecheck
+    - stylecheck
     - tenv
     - typecheck
     - unconvert
-    # - unparam
+    - unparam
     - unused
     - usestdlibvars
     - varnamelen
     # - wrapcheck If we're going to use github.com/pkg/errors we should probably turn this on?
-    # We'd like to have the following linter enabled, but it's broken for Go
-    # 1.19 as of golangci-lint v1.48.0. Re-enable it when this issue is
-    # fixed: https://github.com/golangci/golangci-lint/issues/2649
-    # - structcheck
+    - unused
 
 linters-settings:
   errorlint:
@@ -43,21 +40,21 @@ linters-settings:
       - name: bool-literal-in-expr
       - name: cognitive-complexity
         arguments:
-          - 30 # TODO: gradually reduce it
+          - 27
       - name: datarace
       - name: duplicated-imports
       - name: early-return
       - name: error-return
-      # - name: error-strings
+      - name: error-strings
       - name: if-return
-      # - name: indent-error-flow
+      - name: indent-error-flow
       - name: range-val-address
       - name: receiver-naming
       - name: time-naming
-      # - name: var-naming
+      - name: var-naming
       - name: unreachable-code
   varnamelen:
-    max-distance: 100
+    max-distance: 10
     ignore-decls:
       - a []any
       - c echo.Context
@@ -85,6 +82,3 @@ linters-settings:
       - w http.ResponseWriter
       - w io.Writer
       - w *os.File
-  wrapcheck:
-    ignorePackageGlobs:
-      - go.jetpack.io/devbox/*

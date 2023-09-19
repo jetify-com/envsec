@@ -18,21 +18,21 @@ import (
 
 // to be composed into xyzCmdFlags structs
 type configFlags struct {
-	projectId string
-	orgId     string
+	projectID string
+	orgID     string
 	envName   string
 }
 
 func (f *configFlags) register(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVar(
-		&f.projectId,
+		&f.projectID,
 		"project-id",
 		"",
 		"Project id to namespace secrets by",
 	)
 
 	cmd.PersistentFlags().StringVar(
-		&f.orgId,
+		&f.orgID,
 		"org-id",
 		"",
 		"Organization id to namespace secrets by",
@@ -47,8 +47,8 @@ func (f *configFlags) register(cmd *cobra.Command) {
 }
 
 func (f *configFlags) validateProjectID(orgID typeids.OrganizationID) (string, error) {
-	if f.projectId != "" {
-		return f.projectId, nil
+	if f.projectID != "" {
+		return f.projectID, nil
 	}
 	wd, err := os.Getwd()
 	if err != nil {
@@ -76,14 +76,14 @@ func (f *configFlags) validateProjectID(orgID typeids.OrganizationID) (string, e
 
 type cmdConfig struct {
 	Store envsec.Store
-	EnvId envsec.EnvId
+	EnvID envsec.EnvID
 }
 
 func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
 	var tok *session.Token
 	var err error
 
-	if f.orgId == "" {
+	if f.orgID == "" {
 		client, err := newAuthClient()
 		if err != nil {
 			return nil, err
@@ -101,17 +101,17 @@ func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	s, err := envsec.NewStore(ctx, ssmConfig)
+	store, err := envsec.NewStore(ctx, ssmConfig)
 
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	if tok != nil && f.orgId == "" {
-		f.orgId = tok.IDClaims().OrgID
+	if tok != nil && f.orgID == "" {
+		f.orgID = tok.IDClaims().OrgID
 	}
 
-	orgID, err := typeids.OrganizationIDFromString(f.orgId)
+	orgID, err := typeids.OrganizationIDFromString(f.orgID)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -121,14 +121,14 @@ func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	envid, err := envsec.NewEnvId(projectID, f.orgId, f.envName)
+	envid, err := envsec.NewEnvID(projectID, f.orgID, f.envName)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	return &cmdConfig{
-		Store: s,
-		EnvId: envid,
+		Store: store,
+		EnvID: envid,
 	}, nil
 }
 
@@ -145,7 +145,7 @@ func genSSMConfigForUser(
 		return nil, errors.WithStack(err)
 	}
 	return &envsec.SSMConfig{
-		AccessKeyId:     *creds.AccessKeyId,
+		AccessKeyID:     *creds.AccessKeyId,
 		SecretAccessKey: *creds.SecretKey,
 		SessionToken:    *creds.SessionToken,
 		Region:          fed.Region,
