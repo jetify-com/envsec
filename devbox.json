@@ -10,7 +10,7 @@
     ],
     "scripts": {
       "build": "go build -o dist/envsec cmd/envsec/main.go",
-      "lint": "golangci-lint run",
+      "lint": "golangci-lint run -c ../.golangci.yml",
       "test": "go test ./..."
     }
   },
