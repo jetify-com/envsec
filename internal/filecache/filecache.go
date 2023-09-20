@@ -8,20 +8,17 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/envsec/internal/xdg"
 )
 
 var NotFound = errors.New("not found")
 var Expired = errors.New("expired")
 
-const prefix = "filecache-"
-
 type cache struct {
-	appName string
+	domain string
 }
 
-func New(appName string) *cache {
-	return &cache{appName: appName}
+func New(domain string) *cache {
+	return &cache{domain: domain}
 }
 
 type data struct {
@@ -68,7 +65,11 @@ func (c *cache) Get(key string) ([]byte, error) {
 }
 
 func (c *cache) filename(key string) string {
-	dir := xdg.CacheSubpath(c.appName)
+	cacheDir, err := os.UserCacheDir()
+	if err != nil {
+		cacheDir = "~/.cache"
+	}
+	dir := filepath.Join(cacheDir, c.domain)
 	_ = os.MkdirAll(dir, 0755)
-	return xdg.CacheSubpath(filepath.Join(c.appName, prefix+key))
+	return filepath.Join(dir, key)
 }
