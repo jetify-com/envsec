@@ -6,6 +6,7 @@ package envcli
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/envsec/internal/envvar"
 	"go.jetpack.io/pkg/sandbox/auth"
@@ -101,10 +102,9 @@ func whoAmICmd() *cobra.Command {
 				return err
 			}
 
-			tok := client.GetSession()
-			if tok == nil {
-				fmt.Fprintln(cmd.OutOrStdout(), "Not logged in")
-				return nil
+			tok, ok := client.GetSession()
+			if !ok {
+				return errors.New("not logged in. Run `envsec auth login` to log in")
 			}
 			idClaims := tok.IDClaims()
 

@@ -81,6 +81,7 @@ type cmdConfig struct {
 
 func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
 	var tok *session.Token
+	var ok bool
 	var err error
 
 	if f.orgID == "" {
@@ -89,8 +90,8 @@ func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
 			return nil, err
 		}
 
-		tok = client.GetSession()
-		if tok == nil {
+		tok, ok = client.GetSession()
+		if !ok {
 			return nil, errors.Errorf(
 				"To use envsec you must log in (`envsec auth login`) or specify --project-id and --org-id",
 			)
