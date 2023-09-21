@@ -41,7 +41,10 @@ func InitProject(ctx context.Context, tok *session.Token, dir string) (typeids.P
 		return typeids.NilProjectID, err
 	}
 
-	repoURL, _ := gitRepoURL(dir)
+	repoURL, err := gitRepoURL(dir)
+	if err != nil {
+		return typeids.NilProjectID, err
+	}
 	subdir, _ := gitSubdirectory(dir)
 
 	projectID, err := newClient().newProjectID(ctx, tok, repoURL, subdir)

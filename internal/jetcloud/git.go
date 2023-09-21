@@ -1,6 +1,7 @@
 package jetcloud
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,7 +18,11 @@ func gitRepoURL(wd string) (string, error) {
 	cmd.Dir = wd
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", err
+		// Only check this if first call errors to avoid the extra call.
+		if !isInGitRepo(wd) {
+			return "", fmt.Errorf("you are not in a git repo. envsec is currently only supported in git repos")
+		}
+		return "", fmt.Errorf("failed to get git remote origin url: %w", err)
 	}
 	return normalizeGitRepoURL(string(output)), nil
 }
@@ -56,4 +61,14 @@ func normalizeGitRepoURL(repoURL string) string {
 	// subdomain www is rarely used but the big 3 (github, gitlab, bitbucket)
 	// allow it. Obviously this doesn't work for all subdomains.
 	return strings.TrimSuffix(strings.TrimPrefix(result, "www."), ".git")
+}
+
+func isInGitRepo(wd string) bool {
+	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree")
+	cmd.Dir = wd
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return false
+	}
+	return strings.TrimSpace(string(output)) == "true"
 }
