@@ -19,7 +19,7 @@ func initCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			tok, ok := client.GetSession()
+			tok, ok := client.GetSession(cmd.Context())
 			if !ok {
 				return errors.New("not logged in, run `envsec auth login`")
 			}

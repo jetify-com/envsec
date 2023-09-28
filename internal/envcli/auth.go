@@ -83,7 +83,11 @@ func refreshCmd() *cobra.Command {
 				return err
 			}
 
-			_ = client.RefreshSession()
+			_, ok := client.GetSession(cmd.Context())
+			if !ok {
+				return errors.New("Failed to refresh: not logged in. Run `envsec auth login` to log in")
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), "Refreshed successfully")
 			return nil
 		},
 	}
@@ -102,7 +106,7 @@ func whoAmICmd() *cobra.Command {
 				return err
 			}
 
-			tok, ok := client.GetSession()
+			tok, ok := client.GetSession(cmd.Context())
 			if !ok {
 				return errors.New("not logged in. Run `envsec auth login` to log in")
 			}

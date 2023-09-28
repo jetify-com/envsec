@@ -90,7 +90,7 @@ func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
 			return nil, err
 		}
 
-		tok, ok = client.GetSession()
+		tok, ok = client.GetSession(ctx)
 		if !ok {
 			return nil, errors.Errorf(
 				"To use envsec you must log in (`envsec auth login`) or specify --project-id and --org-id",
