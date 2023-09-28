@@ -13,8 +13,8 @@ import (
 
 var ErrProjectAlreadyInitialized = errors.New("project already initialized")
 
-const dirName = ".jetpack"
-const configName = "envsec.json"
+const dirName = ".jetpack.io"
+const configName = "project.json"
 
 type projectConfig struct {
 	ProjectID typeids.ProjectID      `json:"project_id"`
