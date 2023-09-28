@@ -95,7 +95,12 @@ func refreshCmd() *cobra.Command {
 	return cmd
 }
 
+type whoAmICmdFlags struct {
+	showTokens bool
+}
+
 func whoAmICmd() *cobra.Command {
+	flags := &whoAmICmdFlags{}
 	cmd := &cobra.Command{
 		Use:   "whoami",
 		Short: "Show the current user",
@@ -127,9 +132,23 @@ func whoAmICmd() *cobra.Command {
 				fmt.Fprintf(cmd.OutOrStdout(), "Name: %s\n", idClaims.Name)
 			}
 
+			if flags.showTokens {
+				fmt.Fprintf(cmd.OutOrStdout(), "Access Token: %s\n", tok.AccessToken)
+				fmt.Fprintf(cmd.OutOrStdout(), "ID Token: %s\n", tok.IDToken)
+				fmt.Fprintf(cmd.OutOrStdout(), "Refresh Token: %s\n", tok.RefreshToken)
+
+			}
+
 			return nil
 		},
 	}
+
+	cmd.Flags().BoolVar(
+		&flags.showTokens,
+		"show-tokens",
+		false,
+		"Show the access, id, and refresh tokens",
+	)
 
 	return cmd
 }
