@@ -5,6 +5,7 @@ package envcli
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/pkg/errors"
@@ -56,8 +57,8 @@ func (f *configFlags) validateProjectID(orgID typeids.OrganizationID) (string, e
 	}
 	config, err := jetcloud.ProjectConfig(wd)
 	if errors.Is(err, os.ErrNotExist) {
-		return "", errors.Errorf(
-			"Project ID not specified. You must run `envsec init` or specify --project-id in this directory",
+		return "", fmt.Errorf(
+			"project ID not specified. You must run `envsec init` or specify --project-id in this directory",
 		)
 	} else if err != nil {
 		return "", errors.WithStack(err)
@@ -81,7 +82,6 @@ type cmdConfig struct {
 
 func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
 	var tok *session.Token
-	var ok bool
 	var err error
 
 	if f.orgID == "" {
@@ -90,10 +90,11 @@ func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
 			return nil, err
 		}
 
-		tok, ok = client.GetSession(ctx)
-		if !ok {
-			return nil, errors.Errorf(
-				"To use envsec you must log in (`envsec auth login`) or specify --project-id and --org-id",
+		tok, err = client.GetSession(ctx)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"error: %w. To use envsec you must log in (`envsec auth login`) or specify --project-id and --org-id",
+				err,
 			)
 		}
 	}
