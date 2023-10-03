@@ -11,9 +11,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/envsec"
-	"go.jetpack.io/envsec/internal/awsfed"
 	"go.jetpack.io/envsec/internal/jetcloud"
 	"go.jetpack.io/envsec/internal/typeids"
+	"go.jetpack.io/envsec/pkg/awsfed"
 	"go.jetpack.io/pkg/sandbox/auth/session"
 )
 
@@ -99,7 +99,7 @@ func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
 		}
 	}
 
-	ssmConfig, err := genSSMConfigForUser(ctx, tok)
+	ssmConfig, err := awsfed.GenSSMConfigForUser(ctx, tok)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -131,25 +131,5 @@ func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
 	return &cmdConfig{
 		Store: store,
 		EnvID: envid,
-	}, nil
-}
-
-func genSSMConfigForUser(
-	ctx context.Context,
-	tok *session.Token,
-) (*envsec.SSMConfig, error) {
-	if tok == nil {
-		return &envsec.SSMConfig{}, nil
-	}
-	fed := awsfed.New()
-	creds, err := fed.AWSCreds(ctx, tok)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return &envsec.SSMConfig{
-		AccessKeyID:     *creds.AccessKeyId,
-		SecretAccessKey: *creds.SecretKey,
-		SessionToken:    *creds.SessionToken,
-		Region:          fed.Region,
 	}, nil
 }

@@ -8,6 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
+	"github.com/pkg/errors"
+	"go.jetpack.io/envsec"
 	"go.jetpack.io/envsec/internal/envvar"
 	"go.jetpack.io/envsec/internal/filecache"
 	"go.jetpack.io/pkg/sandbox/auth/session"
@@ -106,4 +108,24 @@ func cacheKey(t *session.Token) string {
 	}
 
 	return fmt.Sprintf("%s-%s", cacheKeyPrefix, id)
+}
+
+func GenSSMConfigForUser(
+	ctx context.Context,
+	tok *session.Token,
+) (*envsec.SSMConfig, error) {
+	if tok == nil {
+		return &envsec.SSMConfig{}, nil
+	}
+	fed := New()
+	creds, err := fed.AWSCreds(ctx, tok)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return &envsec.SSMConfig{
+		AccessKeyID:     *creds.AccessKeyId,
+		SecretAccessKey: *creds.SecretKey,
+		SessionToken:    *creds.SessionToken,
+		Region:          fed.Region,
+	}, nil
 }
