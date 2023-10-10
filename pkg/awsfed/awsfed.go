@@ -38,7 +38,7 @@ func New() *AWSFed {
 	}
 }
 
-func (a *AWSFed) AWSCreds(
+func (a *AWSFed) awsCredsWithLocalCache(
 	ctx context.Context,
 	tok *session.Token,
 ) (*types.Credentials, error) {
@@ -50,17 +50,38 @@ func (a *AWSFed) AWSCreds(
 		}
 	}
 
+	outputCreds, err := a.awsCreds(ctx, tok.IDToken)
+	if err != nil {
+		return nil, err
+	}
+
+	if creds, err := json.Marshal(outputCreds); err != nil {
+		return nil, err
+	} else if err := cache.SetT(
+		cacheKey(tok),
+		creds,
+		*outputCreds.Expiration,
+	); err != nil {
+		return nil, err
+	}
+
+	return outputCreds, nil
+}
+
+// awsCreds behaves similar to AWSCredsWithLocalCache but it takes a JWT from input
+// rather than reading from a file or cache. This is to allow web services use
+// this package without having to write every user's JWT in a cache or a file.
+func (a *AWSFed) awsCreds(
+	ctx context.Context,
+	idToken string,
+) (*types.Credentials, error) {
+
 	svc := cognitoidentity.New(cognitoidentity.Options{
 		Region: a.Region,
 	})
 
-	logins := map[string]string{}
-	if tok.IDClaims() == nil {
-		// skip
-	} else if tok.IDClaims().Issuer == fmt.Sprintf("https://%s/", a.LegacyProvider) {
-		logins[a.LegacyProvider] = tok.IDToken
-	} else {
-		logins[a.Provider] = tok.IDToken
+	logins := map[string]string{
+		a.Provider: idToken,
 	}
 
 	getIdoutput, err := svc.GetId(
@@ -86,16 +107,6 @@ func (a *AWSFed) AWSCreds(
 		return nil, err
 	}
 
-	if creds, err := json.Marshal(output.Credentials); err != nil {
-		return nil, err
-	} else if err := cache.SetT(
-		cacheKey(tok),
-		creds,
-		*output.Credentials.Expiration,
-	); err != nil {
-		return nil, err
-	}
-
 	return output.Credentials, nil
 }
 
@@ -110,15 +121,22 @@ func cacheKey(t *session.Token) string {
 	return fmt.Sprintf("%s-%s", cacheKeyPrefix, id)
 }
 
-func GenSSMConfigForUser(
+func GenSSMConfigFromToken(
 	ctx context.Context,
 	tok *session.Token,
+	useCache bool,
 ) (*envsec.SSMConfig, error) {
 	if tok == nil {
 		return &envsec.SSMConfig{}, nil
 	}
 	fed := New()
-	creds, err := fed.AWSCreds(ctx, tok)
+	var creds *types.Credentials
+	var err error
+	if useCache {
+		creds, err = fed.awsCredsWithLocalCache(ctx, tok)
+	} else {
+		creds, err = fed.awsCreds(ctx, tok.IDToken)
+	}
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

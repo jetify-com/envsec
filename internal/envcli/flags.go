@@ -99,7 +99,7 @@ func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
 		}
 	}
 
-	ssmConfig, err := awsfed.GenSSMConfigForUser(ctx, tok)
+	ssmConfig, err := awsfed.GenSSMConfigFromToken(ctx, tok, true /*useCache*/)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
