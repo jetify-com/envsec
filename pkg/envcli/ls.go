@@ -19,7 +19,7 @@ type listCmdFlags struct {
 	Format     string
 }
 
-func listCmd() *cobra.Command {
+func ListCmd() *cobra.Command {
 	flags := &listCmdFlags{}
 
 	command := &cobra.Command{

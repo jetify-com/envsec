@@ -75,12 +75,16 @@ func (f *configFlags) validateProjectID(orgID typeids.OrganizationID) (string, e
 	return config.ProjectID.String(), nil
 }
 
-type cmdConfig struct {
+type CmdConfig struct {
 	Store envsec.Store
 	EnvID envsec.EnvID
 }
 
-func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
+func (f *configFlags) genConfig(ctx context.Context) (*CmdConfig, error) {
+	if bootstrappedConfig != nil {
+		return bootstrappedConfig, nil
+	}
+
 	var tok *session.Token
 	var err error
 
@@ -128,8 +132,16 @@ func (f *configFlags) genConfig(ctx context.Context) (*cmdConfig, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	return &cmdConfig{
+	return &CmdConfig{
 		Store: store,
 		EnvID: envid,
 	}, nil
+}
+
+var bootstrappedConfig *CmdConfig
+
+// BootstrapConfig is used to set the config for all commands that use genConfig
+// Useful for using envsec programmatically.
+func BootstrapConfig(cmdConfig *CmdConfig) {
+	bootstrappedConfig = cmdConfig
 }

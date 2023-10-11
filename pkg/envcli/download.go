@@ -21,7 +21,7 @@ type downloadCmdFlags struct {
 	format string
 }
 
-func downloadCmd() *cobra.Command {
+func DownloadCmd() *cobra.Command {
 	flags := &downloadCmdFlags{}
 	command := &cobra.Command{
 		Use:   "download <file1>",

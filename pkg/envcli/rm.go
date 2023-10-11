@@ -16,7 +16,7 @@ type removeCmdFlags struct {
 	configFlags
 }
 
-func removeCmd() *cobra.Command {
+func RemoveCmd() *cobra.Command {
 	flags := &removeCmdFlags{}
 	command := &cobra.Command{
 		Use:   "rm <NAME1> [<NAME2>]...",

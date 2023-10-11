@@ -22,7 +22,7 @@ type uploadCmdFlags struct {
 	format string
 }
 
-func uploadCmd() *cobra.Command {
+func UploadCmd() *cobra.Command {
 	flags := &uploadCmdFlags{}
 	command := &cobra.Command{
 		Use:   "upload <file1> [<fileN>]...",

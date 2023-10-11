@@ -17,7 +17,7 @@ type setCmdFlags struct {
 	configFlags
 }
 
-func setCmd() *cobra.Command {
+func SetCmd() *cobra.Command {
 	flags := &setCmdFlags{}
 	command := &cobra.Command{
 		Use:   "set <NAME1>=<value1> [<NAME2>=<value2>]...",

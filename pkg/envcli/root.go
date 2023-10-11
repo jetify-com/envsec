@@ -52,13 +52,13 @@ func RootCmd(flags *rootCmdFlags) *cobra.Command {
 	command.Flag("json-errors").Hidden = true
 
 	command.AddCommand(authCmd())
-	command.AddCommand(downloadCmd())
-	command.AddCommand(execCmd())
+	command.AddCommand(DownloadCmd())
+	command.AddCommand(ExecCmd())
 	command.AddCommand(initCmd())
-	command.AddCommand(listCmd())
-	command.AddCommand(removeCmd())
-	command.AddCommand(setCmd())
-	command.AddCommand(uploadCmd())
+	command.AddCommand(ListCmd())
+	command.AddCommand(RemoveCmd())
+	command.AddCommand(SetCmd())
+	command.AddCommand(UploadCmd())
 	command.SetUsageFunc(UsageFunc)
 	return command
 }

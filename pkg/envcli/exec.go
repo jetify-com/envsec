@@ -18,7 +18,7 @@ type execCmdFlags struct {
 	configFlags
 }
 
-func execCmd() *cobra.Command {
+func ExecCmd() *cobra.Command {
 	flags := &execCmdFlags{}
 	command := &cobra.Command{
 		Use:   "exec <command>",
