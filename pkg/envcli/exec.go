@@ -26,23 +26,17 @@ func ExecCmd() *cobra.Command {
 		Long:  "Execute a specified command with remote environment variables being present for the duration of the command. If an environment variable exists both locally and in remote storage, the remotely stored one is prioritized.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cmdCfg, err := flags.genConfig(cmd.Context())
+			cmdCfg, err := flags.genConfig(cmd)
 			if err != nil {
 				return err
 			}
 			commandString := strings.Join(args, " ")
 			commandToRun := exec.Command("/bin/sh", "-c", commandString)
 
-			// Default environment to fetch values from is DEV
-			envNames := []string{"dev"}
-			// If a specific environment was set by the user, then just use that one.
-			if cmd.Flags().Changed(environmentFlagName) {
-				envNames = []string{strings.ToLower(cmdCfg.EnvID.EnvName)}
-			}
 			envID := envsec.EnvID{
 				OrgID:     cmdCfg.EnvID.OrgID,
 				ProjectID: cmdCfg.EnvID.ProjectID,
-				EnvName:   envNames[0],
+				EnvName:   cmdCfg.EnvID.EnvName,
 			}
 			// Get list of stored env variables
 			envVars, err := cmdCfg.Store.List(cmd.Context(), envID)

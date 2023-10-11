@@ -42,7 +42,7 @@ func SetCmd() *cobra.Command {
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			cmdCfg, err := flags.genConfig(cmd.Context())
+			cmdCfg, err := flags.genConfig(cmd)
 			if err != nil {
 				return errors.WithStack(err)
 			}

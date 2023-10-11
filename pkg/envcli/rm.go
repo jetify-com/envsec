@@ -24,7 +24,7 @@ func RemoveCmd() *cobra.Command {
 		Long:  "Delete one or more environment variables that are stored.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, envNames []string) error {
-			cmdCfg, err := flags.genConfig(cmd.Context())
+			cmdCfg, err := flags.genConfig(cmd)
 			if err != nil {
 				return errors.WithStack(err)
 			}

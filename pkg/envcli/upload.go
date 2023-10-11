@@ -74,7 +74,7 @@ func UploadCmd() *cobra.Command {
 				}
 			}
 
-			cmdCfg, err := flags.genConfig(cmd.Context())
+			cmdCfg, err := flags.genConfig(cmd)
 			if err != nil {
 				return err
 			}

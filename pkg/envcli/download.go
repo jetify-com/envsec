@@ -35,7 +35,7 @@ func DownloadCmd() *cobra.Command {
 			return errors.Wrapf(errUnsupportedFormat, "format: %s", flags.format)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cmdCfg, err := flags.genConfig(cmd.Context())
+			cmdCfg, err := flags.genConfig(cmd)
 			if err != nil {
 				return errors.WithStack(err)
 			}

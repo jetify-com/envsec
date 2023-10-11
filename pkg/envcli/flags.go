@@ -4,7 +4,6 @@
 package envcli
 
 import (
-	"context"
 	"fmt"
 	"os"
 
@@ -76,15 +75,17 @@ func (f *configFlags) validateProjectID(orgID typeids.OrganizationID) (string, e
 }
 
 type CmdConfig struct {
-	Store envsec.Store
-	EnvID envsec.EnvID
+	Store    envsec.Store
+	EnvID    envsec.EnvID
+	EnvNames []string
 }
 
-func (f *configFlags) genConfig(ctx context.Context) (*CmdConfig, error) {
+func (f *configFlags) genConfig(cmd *cobra.Command) (*CmdConfig, error) {
 	if bootstrappedConfig != nil {
 		return bootstrappedConfig, nil
 	}
 
+	ctx := cmd.Context()
 	var tok *session.Token
 	var err error
 
@@ -132,9 +133,15 @@ func (f *configFlags) genConfig(ctx context.Context) (*CmdConfig, error) {
 		return nil, errors.WithStack(err)
 	}
 
+	envNames := []string{"dev", "prod", "staging"}
+	if cmd.Flags().Changed(environmentFlagName) {
+		envNames = []string{envid.EnvName}
+	}
+
 	return &CmdConfig{
-		Store: store,
-		EnvID: envid,
+		Store:    store,
+		EnvID:    envid,
+		EnvNames: envNames,
 	}, nil
 }
 

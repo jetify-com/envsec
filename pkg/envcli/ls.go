@@ -4,8 +4,6 @@
 package envcli
 
 import (
-	"strings"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/envsec"
@@ -29,23 +27,17 @@ func ListCmd() *cobra.Command {
 		Long:    "List all stored environment variables. If no environment flag is provided, variables in all environments will be listed.",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cmdCfg, err := flags.genConfig(cmd.Context())
+			cmdCfg, err := flags.genConfig(cmd)
 			if err != nil {
 				return err
 			}
-			// Populate the valid Environments
-			envNames := []string{"dev", "prod", "staging"}
-			// If a specific environment was set by the user, then just use that one.
-			if cmd.Flags().Changed(environmentFlagName) {
-				envNames = []string{strings.ToLower(cmdCfg.EnvID.EnvName)}
-			}
 
 			// TODO: parallelize
-			for _, envName := range envNames {
+			for _, envName := range cmdCfg.EnvNames {
 				envID := envsec.EnvID{
 					OrgID:     cmdCfg.EnvID.OrgID,
 					ProjectID: cmdCfg.EnvID.ProjectID,
-					EnvName:   strings.ToLower(envName),
+					EnvName:   envName,
 				}
 				envVars, err := cmdCfg.Store.List(cmd.Context(), envID)
 				if err != nil {
