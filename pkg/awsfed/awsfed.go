@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/envsec"
 	"go.jetpack.io/envsec/internal/envvar"
-	"go.jetpack.io/envsec/internal/filecache"
+	"go.jetpack.io/pkg/filecache"
 	"go.jetpack.io/pkg/sandbox/auth/session"
 )
 
@@ -76,9 +76,11 @@ func (a *AWSFed) awsCreds(
 	idToken string,
 ) (*types.Credentials, error) {
 
-	svc := cognitoidentity.New(cognitoidentity.Options{
-		Region: a.Region,
-	})
+	svc := cognitoidentity.New(
+		cognitoidentity.Options{
+			Region: a.Region,
+		},
+	)
 
 	logins := map[string]string{
 		a.Provider: idToken,
