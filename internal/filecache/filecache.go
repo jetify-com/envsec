@@ -14,16 +14,37 @@ var NotFound = errors.New("not found")
 var Expired = errors.New("expired")
 
 type cache struct {
-	domain string
-}
-
-func New(domain string) *cache {
-	return &cache{domain: domain}
+	domain   string
+	cacheDir string
 }
 
 type data struct {
 	Val []byte
 	Exp time.Time
+}
+
+type Option func(*cache)
+
+func New(domain string, opts ...Option) *cache {
+	result := &cache{domain: domain}
+
+	var err error
+	result.cacheDir, err = os.UserCacheDir()
+	if err != nil {
+		result.cacheDir = "~/.cache"
+	}
+
+	for _, opt := range opts {
+		opt(result)
+	}
+
+	return result
+}
+
+func WithCacheDir(dir string) Option {
+	return func(c *cache) {
+		c.cacheDir = dir
+	}
 }
 
 func (c *cache) Set(key string, val []byte, dur time.Duration) error {
@@ -65,11 +86,7 @@ func (c *cache) Get(key string) ([]byte, error) {
 }
 
 func (c *cache) filename(key string) string {
-	cacheDir, err := os.UserCacheDir()
-	if err != nil {
-		cacheDir = "~/.cache"
-	}
-	dir := filepath.Join(cacheDir, c.domain)
+	dir := filepath.Join(c.cacheDir, c.domain)
 	_ = os.MkdirAll(dir, 0755)
 	return filepath.Join(dir, key)
 }
