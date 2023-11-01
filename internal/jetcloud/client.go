@@ -39,7 +39,7 @@ func (c *client) endpoint(path string) string {
 func (c *client) newProjectID(ctx context.Context, tok *session.Token, repo, subdir string) (typeids.ProjectID, error) {
 	p, err := post[struct {
 		ID typeids.ProjectID `json:"id"`
-	}](ctx, c, tok, map[string]string{
+	}](ctx, c, tok, "projects", map[string]string{
 		"repo_url": repo,
 		"subdir":   subdir,
 	})
@@ -50,7 +50,20 @@ func (c *client) newProjectID(ctx context.Context, tok *session.Token, repo, sub
 	return p.ID, nil
 }
 
-func post[T any](ctx context.Context, client *client, tok *session.Token, data any) (*T, error) {
+func (c *client) getAccessToken(
+	ctx context.Context,
+	tok *session.Token,
+) (string, error) {
+	p, err := post[struct {
+		Token string `json:"token"`
+	}](ctx, c, tok, "oauth/token", map[string]string{})
+	if err != nil {
+		return "", err
+	}
+	return p.Token, nil
+}
+
+func post[T any](ctx context.Context, client *client, tok *session.Token, path string, data any) (*T, error) {
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
 		return nil, err
@@ -61,7 +74,7 @@ func post[T any](ctx context.Context, client *client, tok *session.Token, data a
 
 	req, err := http.NewRequest(
 		http.MethodPost,
-		client.endpoint("projects"),
+		client.endpoint(path),
 		bytes.NewBuffer(dataBytes),
 	)
 	if err != nil {
