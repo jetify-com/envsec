@@ -19,7 +19,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/samber/lo v1.38.1
 	github.com/spf13/cobra v1.7.0
-	go.jetpack.io/pkg v0.0.0-20231012130632-77dcd111db2e
+	go.jetpack.io/pkg v0.0.0-20231101182749-1c95dc8d2f59
 	go.jetpack.io/typeid v0.1.0
 	golang.org/x/oauth2 v0.12.0
 	golang.org/x/text v0.13.0
