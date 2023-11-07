@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,6 +18,12 @@ import (
 
 type client struct {
 	apiHost string
+}
+
+type errorResponse struct {
+	Error struct {
+		Message string `json:"message,omitempty"`
+	} `json:"error"`
 }
 
 func newClient() *client {
@@ -89,12 +96,22 @@ func post[T any](ctx context.Context, client *client, tok *session.Token, path s
 	}
 	defer resp.Body.Close()
 
+	body, bodyReadErr := io.ReadAll(resp.Body)
+
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		// Non-200 responses can still have a JSON body with an error message.
+		// Try to parse it and return that error.
+		if bodyReadErr == nil {
+			errResponse := errorResponse{}
+			_ = json.Unmarshal(body, &errResponse)
+			if errResponse.Error.Message != "" {
+				return nil, errors.New(errResponse.Error.Message)
+			}
+		}
 		return nil, fmt.Errorf("request failed %d %s", resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
+	if bodyReadErr != nil {
 		return nil, err
 	}
 
