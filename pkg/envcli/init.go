@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/pkg/sandbox/jetcloud"
+	"go.jetpack.io/pkg/jetcloud"
 )
 
 func initCmd() *cobra.Command {

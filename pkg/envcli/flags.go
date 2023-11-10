@@ -11,8 +11,8 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/envsec"
 	"go.jetpack.io/envsec/pkg/awsfed"
+	"go.jetpack.io/pkg/jetcloud"
 	"go.jetpack.io/pkg/sandbox/auth/session"
-	"go.jetpack.io/pkg/sandbox/jetcloud"
 	"go.jetpack.io/pkg/sandbox/typeids"
 )
 

@@ -7,9 +7,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"go.jetpack.io/pkg/jetauth"
 	"go.jetpack.io/pkg/sandbox/auth"
 	"go.jetpack.io/pkg/sandbox/envvar"
-	"go.jetpack.io/pkg/sandbox/jetauth"
 )
 
 func authCmd() *cobra.Command {
