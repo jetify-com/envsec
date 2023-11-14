@@ -20,6 +20,7 @@ require (
 	github.com/samber/lo v1.38.1
 	github.com/spf13/cobra v1.7.0
 	go.jetpack.io/pkg v0.0.0-20231110225622-e71b38cc696e
+	go.jetpack.io/typeid v0.1.0
 	golang.org/x/text v0.13.0
 )
 
@@ -52,7 +53,6 @@ require (
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	go.jetpack.io/typeid v0.1.0 // indirect
 	golang.org/x/crypto v0.13.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/oauth2 v0.12.0 // indirect
