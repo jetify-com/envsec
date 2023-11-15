@@ -11,9 +11,9 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/envsec"
 	"go.jetpack.io/envsec/pkg/awsfed"
+	"go.jetpack.io/pkg/auth/session"
+	"go.jetpack.io/pkg/id"
 	"go.jetpack.io/pkg/jetcloud"
-	"go.jetpack.io/pkg/sandbox/auth/session"
-	"go.jetpack.io/pkg/sandbox/typeids"
 	"go.jetpack.io/typeid"
 )
 
@@ -47,7 +47,7 @@ func (f *configFlags) register(cmd *cobra.Command) {
 	)
 }
 
-func (f *configFlags) validateProjectID(orgID typeids.OrgID) (string, error) {
+func (f *configFlags) validateProjectID(orgID id.OrgID) (string, error) {
 	if f.projectID != "" {
 		return f.projectID, nil
 	}
@@ -119,7 +119,7 @@ func (f *configFlags) genConfig(cmd *cobra.Command) (*CmdConfig, error) {
 		f.orgID = tok.IDClaims().OrgID
 	}
 
-	orgID, err := typeid.Parse[typeids.OrgID](f.orgID)
+	orgID, err := typeid.Parse[id.OrgID](f.orgID)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
