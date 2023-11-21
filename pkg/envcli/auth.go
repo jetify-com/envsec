@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/pkg/auth"
 	"go.jetpack.io/pkg/envvar"
-	"go.jetpack.io/pkg/jetauth"
 )
 
 func authCmd() *cobra.Command {
@@ -36,7 +35,7 @@ func loginCmd() *cobra.Command {
 				return err
 			}
 
-			_, err = client.LoginFlow(cmd.Context())
+			_, err = client.LoginFlow()
 			if err == nil {
 				fmt.Fprintln(cmd.OutOrStdout(), "Logged in successfully")
 			}
@@ -132,5 +131,5 @@ func newAuthClient() (*auth.Client, error) {
 	// TODO: Consider making scopes and audience configurable:
 	// "ENVSEC_AUTH_SCOPE" = "openid offline_access email profile"
 	// "ENVSEC_AUTH_AUDIENCE" = "https://api.jetpack.io",
-	return jetauth.NewClient(issuer, clientID)
+	return auth.NewClient(issuer, clientID)
 }
