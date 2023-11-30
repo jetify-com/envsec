@@ -1,3 +1,5 @@
+connectrpc.com/connect v1.12.0 h1:HwKdOY0lGhhoHdsza+hW55aqHEC64pYpObRNoAgn70g=
+connectrpc.com/connect v1.12.0/go.mod h1:3AGaO6RRGMx5IKFfqbe3hvK1NqLosFNP2BxDYTPmNPo=
 github.com/MakeNowJust/heredoc v1.0.0 h1:cXCdzVdstXyiTqTvfqk9SDHpKNjxuom+DOlyEeQ4pzQ=
 github.com/MakeNowJust/heredoc v1.0.0/go.mod h1:mG5amYoWBHf8vpLOuehzbGGw0EHxpZZ6lCpQ4fNJ8LE=
 github.com/aws/aws-sdk-go-v2 v1.21.0/go.mod h1:/RfNgGmRxI+iFOB1OeJUyxiU+9s88k3pfHvDagGEp0M=
@@ -117,8 +119,8 @@ github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
-go.jetpack.io/pkg v0.0.0-20231121204953-1e699ff11dbc h1:hoNA8DGi9iXqzv1zJYOB7LjPC8Pyf4b3845168JnH3s=
-go.jetpack.io/pkg v0.0.0-20231121204953-1e699ff11dbc/go.mod h1:3k4+Ccph6cMsBCOff/htMZfWfVOuLwmJr4M76GpJo1s=
+go.jetpack.io/pkg v0.0.0-20231127210015-4c548cfce5dc h1:GMUkeFZCaLU4Rkz8w+W5OUpwuA+I2a7L/e7bQNhOh4g=
+go.jetpack.io/pkg v0.0.0-20231127210015-4c548cfce5dc/go.mod h1:rsNDcChLZ97F6AruOv1Dm83NsbGYdTbK9FZ/0UrZbP4=
 go.jetpack.io/typeid v0.1.0 h1:suTmjNR3y2em2gCTG06agFfcACm3+zuxfziMUk5UXnw=
 go.jetpack.io/typeid v0.1.0/go.mod h1:E11ObFkKlvsSTxwwYIm+zpbsRthjIMDy/JGBogs2vSo=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=

@@ -3,6 +3,7 @@ module go.jetpack.io/envsec
 go 1.20
 
 require (
+	connectrpc.com/connect v1.12.0
 	github.com/MakeNowJust/heredoc v1.0.0
 	github.com/aws/aws-sdk-go-v2 v1.23.0
 	github.com/aws/aws-sdk-go-v2/config v1.25.1
@@ -19,7 +20,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/samber/lo v1.38.1
 	github.com/spf13/cobra v1.8.0
-	go.jetpack.io/pkg v0.0.0-20231121204953-1e699ff11dbc
+	go.jetpack.io/pkg v0.0.0-20231127210015-4c548cfce5dc
 	go.jetpack.io/typeid v0.1.0
 	golang.org/x/text v0.14.0
 )
