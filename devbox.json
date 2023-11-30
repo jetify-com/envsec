@@ -18,7 +18,7 @@
         "export ENVSEC_ISSUER=https://laughing-agnesi-vzh2rap9f6.projects.oryapis.com",
         "export ENVSEC_JETPACK_API_ENDPOINT=https://apisvc-6no3bdensq-uk.a.run.app",
         // set ENVSEC_JETPACK_API_ENDPOINT to localhost:8080 if running apisvc locally
-        "export ENVSEC_JETPACK_API_ENDPOINT=http://localhost:8080",
+        // "export ENVSEC_JETPACK_API_ENDPOINT=http://localhost:8080",
         "devbox run build",
         "dist/envsec auth login",
       ],
