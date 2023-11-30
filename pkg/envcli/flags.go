@@ -112,7 +112,7 @@ func (f *configFlags) genConfig(cmd *cobra.Command) (*CmdConfig, error) {
 	store, err := envsec.NewStore(ctx, ssmConfig)
 
 	// Uncomment this to use the Jetpack API instead of AWS SSM store
-	// store, err := envsec.NewStore(ctx, envsec.NewJetpackAPIConfig(tok.AccessToken))
+	// store, err = envsec.NewStore(ctx, envsec.NewJetpackAPIConfig(tok.AccessToken))
 
 	if err != nil {
 		return nil, errors.WithStack(err)

@@ -5,6 +5,7 @@ package envsec
 
 import (
 	"context"
+	"os"
 	"path"
 
 	"github.com/pkg/errors"
@@ -120,9 +121,6 @@ type JetpackAPIConfig struct {
 // prodJetpackAPIEndpoint is used for production.
 const prodJetpackAPIEndpoint = "https://api.jetpack.io"
 
-// localhostJetpackAPIEndpoint is used for local development.
-// const localhostJetpackAPIEndpoint = "http://localhost:8080"
-
 // JetpackAPIStore implements interface Config (compile-time check)
 var _ Config = (*JetpackAPIConfig)(nil)
 
@@ -131,9 +129,9 @@ func (c *JetpackAPIConfig) IsEnvStoreConfig() bool {
 }
 
 func NewJetpackAPIConfig(token string) *JetpackAPIConfig {
-	return &JetpackAPIConfig{
-		endpoint: prodJetpackAPIEndpoint,
-		// endpoint: localhostJetpackAPIEndpoint,
-		token: token,
+	endpoint := prodJetpackAPIEndpoint
+	if e := os.Getenv("ENVSEC_JETPACK_API_ENDPOINT"); e != "" {
+		endpoint = e
 	}
+	return &JetpackAPIConfig{endpoint, token}
 }
