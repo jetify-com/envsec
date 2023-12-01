@@ -20,8 +20,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/samber/lo v1.38.1
 	github.com/spf13/cobra v1.8.0
-	go.jetpack.io/pkg v0.0.0-20231127210015-4c548cfce5dc
-	go.jetpack.io/typeid v0.1.0
+	go.jetpack.io/pkg v0.0.0-20231201205537-18a1127b5823
+	go.jetpack.io/typeid v1.0.0
 	golang.org/x/text v0.14.0
 )
 
@@ -46,6 +46,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
