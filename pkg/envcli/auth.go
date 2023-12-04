@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"go.jetpack.io/envsec/internal/build"
 	"go.jetpack.io/pkg/auth"
 	"go.jetpack.io/pkg/envvar"
 )
@@ -126,8 +127,8 @@ func whoAmICmd() *cobra.Command {
 }
 
 func newAuthClient() (*auth.Client, error) {
-	issuer := envvar.Get("ENVSEC_ISSUER", "https://accounts.jetpack.io")
-	clientID := envvar.Get("ENVSEC_CLIENT_ID", "ff3d4c9c-1ac8-42d9-bef1-f5218bb1a9f6")
+	issuer := envvar.Get("ENVSEC_ISSUER", build.Issuer())
+	clientID := envvar.Get("ENVSEC_CLIENT_ID", build.ClientID())
 	// TODO: Consider making scopes and audience configurable:
 	// "ENVSEC_AUTH_SCOPE" = "openid offline_access email profile"
 	// "ENVSEC_AUTH_AUDIENCE" = "https://api.jetpack.io",

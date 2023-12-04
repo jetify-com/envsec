@@ -60,6 +60,7 @@ func RootCmd(flags *rootCmdFlags) *cobra.Command {
 	command.AddCommand(RemoveCmd())
 	command.AddCommand(SetCmd())
 	command.AddCommand(UploadCmd())
+	command.AddCommand(versionCmd())
 	command.SetUsageFunc(UsageFunc)
 	return command
 }

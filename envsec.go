@@ -5,10 +5,11 @@ package envsec
 
 import (
 	"context"
-	"os"
 	"path"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/envsec/internal/build"
+	"go.jetpack.io/pkg/envvar"
 )
 
 const pathPrefix = "/jetpack-data/env"
@@ -114,12 +115,9 @@ func (c *SSMConfig) hasDefaultPaths() bool {
 }
 
 type JetpackAPIConfig struct {
-	endpoint string
-	token    string
+	host  string
+	token string
 }
-
-// prodJetpackAPIEndpoint is used for production.
-const prodJetpackAPIEndpoint = "https://api.jetpack.io"
 
 // JetpackAPIStore implements interface Config (compile-time check)
 var _ Config = (*JetpackAPIConfig)(nil)
@@ -129,9 +127,8 @@ func (c *JetpackAPIConfig) IsEnvStoreConfig() bool {
 }
 
 func NewJetpackAPIConfig(token string) *JetpackAPIConfig {
-	endpoint := prodJetpackAPIEndpoint
-	if e := os.Getenv("ENVSEC_JETPACK_API_ENDPOINT"); e != "" {
-		endpoint = e
+	return &JetpackAPIConfig{
+		envvar.Get("ENVSEC_JETPACK_API_HOST", build.JetpackAPIHost()),
+		token,
 	}
-	return &JetpackAPIConfig{endpoint, token}
 }
