@@ -152,12 +152,7 @@ func (j JetpackAPIStore) DeleteAll(ctx context.Context, envID EnvID, names []str
 }
 
 func (j JetpackAPIStore) client() secretsv1alpha1connect.SecretsServiceClient {
-	return secretsv1alpha1connect.NewSecretsServiceClient(
-		http.DefaultClient,
-		j.config.host,
-		// TODO: Do we want grpc?
-		connect.WithGRPC(),
-	)
+	return secretsv1alpha1connect.NewSecretsServiceClient(http.DefaultClient, j.config.host)
 }
 
 func newRequest[T any](message *T, token string) *connect.Request[T] {

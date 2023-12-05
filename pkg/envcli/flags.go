@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/envsec"
+	"go.jetpack.io/envsec/internal/build"
 	"go.jetpack.io/envsec/pkg/awsfed"
 	"go.jetpack.io/pkg/auth/session"
 	"go.jetpack.io/pkg/id"
@@ -55,7 +56,8 @@ func (f *configFlags) validateProjectID(orgID id.OrgID) (string, error) {
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	config, err := jetcloud.ProjectConfig(wd)
+	c := jetcloud.Client{APIHost: build.JetpackAPIHost(), IsDev: build.IsDev}
+	config, err := c.ProjectConfig(wd)
 	if errors.Is(err, os.ErrNotExist) {
 		return "", fmt.Errorf(
 			"project ID not specified. You must run `envsec init` or specify --project-id in this directory",
@@ -105,14 +107,25 @@ func (f *configFlags) genConfig(cmd *cobra.Command) (*CmdConfig, error) {
 		}
 	}
 
-	ssmConfig, err := awsfed.GenSSMConfigFromToken(ctx, tok, true /*useCache*/)
-	if err != nil {
-		return nil, errors.WithStack(err)
+	var store envsec.Store
+	if !build.IsDev {
+		// Temporarily use the SSM config until prod-apisvc is ready
+		// AND we migrate all the secrets of services to the new store.
+		ssmConfig, err := awsfed.GenSSMConfigFromToken(ctx, tok, true /*useCache*/)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		store, err = envsec.NewStore(ctx, ssmConfig)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	} else {
+		// dev-apisvc is ready so we can use it already
+		store, err = envsec.NewStore(ctx, envsec.NewJetpackAPIConfig(tok.AccessToken))
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
 	}
-	store, err := envsec.NewStore(ctx, ssmConfig)
-
-	// Uncomment this to use the Jetpack API instead of AWS SSM store
-	// store, err = envsec.NewStore(ctx, envsec.NewJetpackAPIConfig(tok.AccessToken))
 
 	if err != nil {
 		return nil, errors.WithStack(err)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"go.jetpack.io/envsec/internal/build"
 	"go.jetpack.io/pkg/jetcloud"
 )
 
@@ -24,12 +25,20 @@ func initCmd() *cobra.Command {
 				return fmt.Errorf("error: %w, run `envsec auth login`", err)
 			}
 
-			wd, err := os.Getwd()
+			workdir, err := os.Getwd()
 			if err != nil {
 				return err
 			}
 
-			projectID, err := jetcloud.InitProject(cmd.Context(), tok, wd)
+			apiHost := build.JetpackAPIHost()
+			if !build.IsDev {
+				// Temporarily continue to use envsec-service in prod
+				// until prod-apisvc is ready.
+				apiHost = "https://envsec-service-prod.cloud.jetpack.dev"
+			}
+
+			c := jetcloud.Client{APIHost: apiHost, IsDev: build.IsDev}
+			projectID, err := c.InitProject(cmd.Context(), tok, workdir)
 			if errors.Is(err, jetcloud.ErrProjectAlreadyInitialized) {
 				fmt.Fprintf(
 					cmd.ErrOrStderr(),
