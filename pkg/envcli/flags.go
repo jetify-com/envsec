@@ -13,6 +13,7 @@ import (
 	"go.jetpack.io/envsec/internal/build"
 	"go.jetpack.io/envsec/pkg/awsfed"
 	"go.jetpack.io/pkg/auth/session"
+	"go.jetpack.io/pkg/envvar"
 	"go.jetpack.io/pkg/id"
 	"go.jetpack.io/pkg/jetcloud"
 	"go.jetpack.io/typeid"
@@ -108,9 +109,8 @@ func (f *configFlags) genConfig(cmd *cobra.Command) (*CmdConfig, error) {
 	}
 
 	var store envsec.Store
-	if !build.IsDev {
-		// Temporarily use the SSM config until prod-apisvc is ready
-		// AND we migrate all the secrets of services to the new store.
+	if envvar.Bool("ENVSEC_USE_AWS_STORE") {
+		// Temporary hack to enable the AWS store
 		ssmConfig, err := awsfed.GenSSMConfigFromToken(ctx, tok, true /*useCache*/)
 		if err != nil {
 			return nil, errors.WithStack(err)
@@ -120,7 +120,6 @@ func (f *configFlags) genConfig(cmd *cobra.Command) (*CmdConfig, error) {
 			return nil, errors.WithStack(err)
 		}
 	} else {
-		// dev-apisvc is ready so we can use it already
 		store, err = envsec.NewStore(ctx, envsec.NewJetpackAPIConfig(tok.AccessToken))
 		if err != nil {
 			return nil, errors.WithStack(err)

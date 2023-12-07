@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/envsec/internal/build"
+	"go.jetpack.io/pkg/envvar"
 	"go.jetpack.io/pkg/jetcloud"
 )
 
@@ -31,9 +32,8 @@ func initCmd() *cobra.Command {
 			}
 
 			apiHost := build.JetpackAPIHost()
-			if !build.IsDev {
-				// Temporarily continue to use envsec-service in prod
-				// until prod-apisvc is ready.
+			if envvar.Bool("ENVSEC_USE_AWS_STORE") {
+				// Temporary hack to use the AWS store
 				apiHost = "https://envsec-service-prod.cloud.jetpack.dev"
 			}
 
