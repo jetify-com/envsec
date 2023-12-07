@@ -20,7 +20,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/samber/lo v1.38.1
 	github.com/spf13/cobra v1.8.0
-	go.jetpack.io/pkg v0.0.0-20231205203316-665061e0a54c
+	go.jetpack.io/pkg v0.0.0-20231207203241-4aedd928f9ee
 	go.jetpack.io/typeid v1.0.0
 	golang.org/x/text v0.14.0
 )
