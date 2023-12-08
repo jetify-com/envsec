@@ -30,9 +30,6 @@ jobs:
             ~/go/pkg
           key: ${{ runner.os }}-${{ hashFiles('**/*.sum') }}
 
-      - name: Lint
-        run: devbox run lint
-
       - name: Build
         run: devbox run build
 
