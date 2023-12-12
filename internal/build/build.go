@@ -34,7 +34,7 @@ func ClientID() string {
 
 func JetpackAPIHost() string {
 	if IsDev {
-		return "https://apisvc-6no3bdensq-uk.a.run.app"
+		return "https://api.jetpack.dev"
 	}
 	return "https://api.jetpack.io"
 }
