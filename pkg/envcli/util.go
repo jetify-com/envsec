@@ -90,7 +90,6 @@ func printEnv(
 	default:
 		return errors.New("incorrect format. Must be one of table|dotenv|json")
 	}
-
 }
 
 func printTableFormat(cmd *cobra.Command,

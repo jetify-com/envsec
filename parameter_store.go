@@ -100,7 +100,6 @@ func (s *parameterStore) newParameter(ctx context.Context, param *parameter, val
 
 // Updates a stored parameter.
 func (s *parameterStore) overwriteParameterValue(ctx context.Context, v *parameter, value string) error {
-
 	input := &ssm.PutParameterInput{
 		Name:        aws.String(v.id),
 		Description: aws.String(v.description),

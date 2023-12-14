@@ -75,7 +75,7 @@ func DownloadCmd() *cobra.Command {
 				return errors.WithStack(err)
 			}
 
-			err = os.WriteFile(filePath, contents, 0644)
+			err = os.WriteFile(filePath, contents, 0o644)
 			if err != nil {
 				return errors.WithStack(err)
 			}

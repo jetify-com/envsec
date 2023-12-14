@@ -44,7 +44,7 @@ type StyleRenderer interface {
 }
 
 func Renderer(styleRule StyleRule, tokens map[string]string) StyleRenderer {
-	var renderer = lipgloss.NewStyle()
+	renderer := lipgloss.NewStyle()
 	renderer = renderer.Bold(styleRule.Bold)
 	renderer = renderer.Italic(styleRule.Italic)
 	renderer = renderer.Underline(styleRule.Underline)

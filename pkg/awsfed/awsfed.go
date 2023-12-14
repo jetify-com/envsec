@@ -75,7 +75,6 @@ func (a *AWSFed) awsCreds(
 	ctx context.Context,
 	idToken string,
 ) (*types.Credentials, error) {
-
 	svc := cognitoidentity.New(
 		cognitoidentity.Options{
 			Region: a.Region,

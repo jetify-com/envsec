@@ -25,16 +25,9 @@ func initCmd() *cobra.Command {
 				return err
 			}
 
-			return (&envsec.Envsec{
-				APIHost: build.JetpackAPIHost(),
-				Auth: envsec.AuthConfig{
-					ClientID: envvar.Get("ENVSEC_CLIENT_ID", build.ClientID()),
-					Issuer:   envvar.Get("ENVSEC_ISSUER", build.Issuer()),
-				},
-				IsDev:      build.IsDev,
-				Stderr:     cmd.ErrOrStderr(),
-				WorkingDir: workingDir,
-			}).NewProject(cmd.Context(), flags.force)
+			e := defaultEnvsec(cmd)
+			e.WorkingDir = workingDir
+			return e.NewProject(cmd.Context(), flags.force)
 		},
 	}
 
@@ -47,4 +40,16 @@ func initCmd() *cobra.Command {
 	)
 
 	return command
+}
+
+func defaultEnvsec(cmd *cobra.Command) *envsec.Envsec {
+	return &envsec.Envsec{
+		APIHost: build.JetpackAPIHost(),
+		Auth: envsec.AuthConfig{
+			ClientID: envvar.Get("ENVSEC_CLIENT_ID", build.ClientID()),
+			Issuer:   envvar.Get("ENVSEC_ISSUER", build.Issuer()),
+		},
+		IsDev:  build.IsDev,
+		Stderr: cmd.ErrOrStderr(),
+	}
 }

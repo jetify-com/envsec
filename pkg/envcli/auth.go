@@ -80,39 +80,8 @@ func whoAmICmd() *cobra.Command {
 		Short: "Show the current user",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			client, err := newAuthClient()
-			if err != nil {
-				return err
-			}
-
-			tok, err := client.GetSession(cmd.Context())
-			if err != nil {
-				return fmt.Errorf("error: %w. Run `envsec auth login` to log in", err)
-			}
-			idClaims := tok.IDClaims()
-
-			fmt.Fprintf(cmd.OutOrStdout(), "Logged in\n")
-			fmt.Fprintf(cmd.OutOrStdout(), "User ID: %s\n", idClaims.Subject)
-
-			if idClaims.OrgID != "" {
-				fmt.Fprintf(cmd.OutOrStdout(), "Org ID: %s\n", idClaims.OrgID)
-			}
-
-			if idClaims.Email != "" {
-				fmt.Fprintf(cmd.OutOrStdout(), "Email: %s\n", idClaims.Email)
-			}
-
-			if idClaims.Name != "" {
-				fmt.Fprintf(cmd.OutOrStdout(), "Name: %s\n", idClaims.Name)
-			}
-
-			if flags.showTokens {
-				fmt.Fprintf(cmd.OutOrStdout(), "Access Token: %s\n", tok.AccessToken)
-				fmt.Fprintf(cmd.OutOrStdout(), "ID Token: %s\n", tok.IDToken)
-				fmt.Fprintf(cmd.OutOrStdout(), "Refresh Token: %s\n", tok.RefreshToken)
-			}
-
-			return nil
+			return defaultEnvsec(cmd).
+				WhoAmI(cmd.Context(), cmd.OutOrStdout(), flags.showTokens)
 		},
 	}
 
@@ -132,5 +101,9 @@ func newAuthClient() (*auth.Client, error) {
 	// TODO: Consider making scopes and audience configurable:
 	// "ENVSEC_AUTH_SCOPE" = "openid offline_access email profile"
 	// "ENVSEC_AUTH_AUDIENCE" = "https://api.jetpack.io",
-	return auth.NewClient(issuer, clientID)
+	return auth.NewClient(
+		issuer,
+		clientID,
+		[]string{"openid", "offline_access", "email", "profile"},
+	)
 }

@@ -12,6 +12,10 @@
       "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#golangci-lint",
       "source": "devbox-search",
       "version": "1.53.3"
+    },
+    "runx:mvdan/gofumpt@latest": {
+      "resolved": "mvdan/gofumpt@v0.5.0",
+      "version": "v0.5.0"
     }
   }
 }
