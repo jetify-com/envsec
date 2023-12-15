@@ -20,9 +20,9 @@ func (e *Envsec) NewProject(ctx context.Context, force bool) error {
 		return err
 	}
 
-	tok, err := client.GetSession(ctx)
+	tok, err := client.LoginFlowIfNeeded(ctx)
 	if err != nil {
-		return fmt.Errorf("error: %w, run `envsec auth login`", err)
+		return err
 	}
 
 	c := jetcloud.Client{APIHost: e.APIHost, IsDev: e.IsDev}
