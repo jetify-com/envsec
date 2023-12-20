@@ -32,6 +32,9 @@ func GitSubdirectory(wd string) (string, error) {
 	cmd.Dir = wd
 	output, err := cmd.CombinedOutput()
 	if err != nil {
+		if !isInGitRepo(wd) {
+			return "", nil
+		}
 		return "", err
 	}
 	return filepath.Clean(strings.TrimSpace(string(output))), nil

@@ -49,12 +49,23 @@ func (i *Init) Run(ctx context.Context) (id.ProjectID, error) {
 
 	// TODO: printOrgNotice will be a team picker once that is implemented.
 	i.printOrgNotice(member)
-	linkToExisting, err := i.linkToExistingPrompt()
+	orgID, err := typeid.Parse[id.OrgID](i.Token.IDClaims().OrgID)
 	if err != nil {
 		return id.ProjectID{}, err
 	}
-	if linkToExisting {
-		return i.showExistingListPrompt(ctx)
+
+	projects, err := i.Client.ListProjects(ctx, orgID)
+	if err != nil {
+		return id.ProjectID{}, err
+	}
+	if len(projects) > 0 {
+		linkToExisting, err := i.linkToExistingPrompt()
+		if err != nil {
+			return id.ProjectID{}, err
+		}
+		if linkToExisting {
+			return i.showExistingListPrompt(projects)
+		}
 	}
 	return i.createNewPrompt(ctx, member)
 }
@@ -85,18 +96,8 @@ func (i *Init) linkToExistingPrompt() (bool, error) {
 }
 
 func (i *Init) showExistingListPrompt(
-	ctx context.Context,
+	projects []*projectsv1alpha1.Project,
 ) (id.ProjectID, error) {
-	orgID, err := typeid.Parse[id.OrgID](i.Token.IDClaims().OrgID)
-	if err != nil {
-		return id.ProjectID{}, err
-	}
-
-	projects, err := i.Client.ListProjects(ctx, orgID)
-	if err != nil {
-		return id.ProjectID{}, err
-	}
-
 	repo, err := git.GitRepoURL(i.WorkingDir)
 	if err != nil {
 		return id.ProjectID{}, err
@@ -154,7 +155,7 @@ func (i *Init) createNewPrompt(
 		Label:   "What’s the name of your new project",
 		Default: filepath.Base(i.WorkingDir),
 		Validate: func(name string) error {
-			if name == "" {
+			if strings.TrimSpace(name) == "" {
 				return errors.New("project name cannot be empty")
 			}
 			return nil
@@ -186,7 +187,7 @@ func (i *Init) createNewPrompt(
 		orgID,
 		repo,
 		directory,
-		name,
+		strings.TrimSpace(name),
 	)
 	if err != nil {
 		return id.ProjectID{}, err
