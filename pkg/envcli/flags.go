@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/envsec"
+	"go.jetpack.io/envsec/internal/build"
 	"go.jetpack.io/envsec/pkg/awsfed"
 	envsecLib "go.jetpack.io/envsec/pkg/envsec"
 	"go.jetpack.io/pkg/auth/session"
@@ -58,6 +59,7 @@ func (f *configFlags) validateProjectID(orgID id.OrgID) (string, error) {
 	}
 	config, err := (&envsecLib.Envsec{
 		WorkingDir: wd,
+		IsDev:      build.IsDev,
 	}).ProjectConfig(wd)
 	if errors.Is(err, os.ErrNotExist) {
 		return "", fmt.Errorf(
