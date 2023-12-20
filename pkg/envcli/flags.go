@@ -122,7 +122,7 @@ func (f *configFlags) genConfig(cmd *cobra.Command) (*CmdConfig, error) {
 			return nil, errors.WithStack(err)
 		}
 	} else {
-		store, err = envsec.NewStore(ctx, envsec.NewJetpackAPIConfig(tok.AccessToken))
+		store, err = envsec.NewStore(ctx, envsec.NewJetpackAPIConfig(tok))
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}

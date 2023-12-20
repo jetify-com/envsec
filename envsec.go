@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/envsec/internal/build"
+	"go.jetpack.io/pkg/auth/session"
 	"go.jetpack.io/pkg/envvar"
 )
 
@@ -63,7 +64,7 @@ func NewStore(ctx context.Context, config Config) (Store, error) {
 	case *SSMConfig:
 		return newSSMStore(ctx, config)
 	case *JetpackAPIConfig:
-		return newJetpackAPIStore(config), nil
+		return newJetpackAPIStore(ctx, config), nil
 	default:
 		return nil, errors.Errorf("unsupported store type: %T", config)
 	}
@@ -116,7 +117,7 @@ func (c *SSMConfig) hasDefaultPaths() bool {
 
 type JetpackAPIConfig struct {
 	host  string
-	token string
+	token *session.Token
 }
 
 // JetpackAPIStore implements interface Config (compile-time check)
@@ -126,7 +127,7 @@ func (c *JetpackAPIConfig) IsEnvStoreConfig() bool {
 	return true
 }
 
-func NewJetpackAPIConfig(token string) *JetpackAPIConfig {
+func NewJetpackAPIConfig(token *session.Token) *JetpackAPIConfig {
 	return &JetpackAPIConfig{
 		envvar.Get("ENVSEC_JETPACK_API_HOST", build.JetpackAPIHost()),
 		token,

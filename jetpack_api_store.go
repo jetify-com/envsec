@@ -2,28 +2,30 @@ package envsec
 
 import (
 	"context"
-	"net/http"
 
 	"connectrpc.com/connect"
+	"go.jetpack.io/pkg/api"
 	secretsv1alpha1 "go.jetpack.io/pkg/api/gen/priv/secrets/v1alpha1"
 	"go.jetpack.io/pkg/api/gen/priv/secrets/v1alpha1/secretsv1alpha1connect"
 )
 
 type JetpackAPIStore struct {
-	config *JetpackAPIConfig
+	client secretsv1alpha1connect.SecretsServiceClient
 }
 
 // JetpackAPIStore implements interface Store (compile-time check)
 var _ Store = (*JetpackAPIStore)(nil)
 
-func newJetpackAPIStore(config *JetpackAPIConfig) *JetpackAPIStore {
-	return &JetpackAPIStore{config: config}
+func newJetpackAPIStore(ctx context.Context, config *JetpackAPIConfig) *JetpackAPIStore {
+	return &JetpackAPIStore{
+		client: api.NewClient(ctx, config.host, config.token).SecretsService(),
+	}
 }
 
 func (j JetpackAPIStore) List(ctx context.Context, envID EnvID) ([]EnvVar, error) {
-	resp, err := j.client().ListSecrets(
+	resp, err := j.client.ListSecrets(
 		ctx,
-		newRequest(&secretsv1alpha1.ListSecretsRequest{ProjectId: envID.ProjectID}, j.config.token),
+		connect.NewRequest(&secretsv1alpha1.ListSecretsRequest{ProjectId: envID.ProjectID}),
 	)
 	if err != nil {
 		return nil, err
@@ -43,8 +45,8 @@ func (j JetpackAPIStore) List(ctx context.Context, envID EnvID) ([]EnvVar, error
 }
 
 func (j JetpackAPIStore) Set(ctx context.Context, envID EnvID, name string, value string) error {
-	_, err := j.client().PatchSecret(
-		ctx, newRequest(
+	_, err := j.client.PatchSecret(
+		ctx, connect.NewRequest(
 			&secretsv1alpha1.PatchSecretRequest{
 				ProjectId: envID.ProjectID,
 				Secret: &secretsv1alpha1.Secret{
@@ -54,7 +56,6 @@ func (j JetpackAPIStore) Set(ctx context.Context, envID EnvID, name string, valu
 					},
 				},
 			},
-			j.config.token,
 		),
 	)
 	return err
@@ -80,8 +81,8 @@ func (j JetpackAPIStore) SetAll(ctx context.Context, envID EnvID, values map[str
 		)
 	}
 
-	_, err := j.client().Batch(
-		ctx, newRequest(&secretsv1alpha1.BatchRequest{Actions: patchActions}, j.config.token),
+	_, err := j.client.Batch(
+		ctx, connect.NewRequest(&secretsv1alpha1.BatchRequest{Actions: patchActions}),
 	)
 	return err
 }
@@ -116,14 +117,13 @@ func (j JetpackAPIStore) GetAll(ctx context.Context, envID EnvID, names []string
 }
 
 func (j JetpackAPIStore) Delete(ctx context.Context, envID EnvID, name string) error {
-	_, err := j.client().DeleteSecret(
-		ctx, newRequest(
+	_, err := j.client.DeleteSecret(
+		ctx, connect.NewRequest(
 			&secretsv1alpha1.DeleteSecretRequest{
 				ProjectId:    envID.ProjectID,
 				SecretName:   name,
 				Environments: []string{envID.EnvName},
 			},
-			j.config.token,
 		),
 	)
 	return err
@@ -145,18 +145,8 @@ func (j JetpackAPIStore) DeleteAll(ctx context.Context, envID EnvID, names []str
 		)
 	}
 
-	_, err := j.client().Batch(
-		ctx, newRequest(&secretsv1alpha1.BatchRequest{Actions: deleteActions}, j.config.token),
+	_, err := j.client.Batch(
+		ctx, connect.NewRequest(&secretsv1alpha1.BatchRequest{Actions: deleteActions}),
 	)
 	return err
-}
-
-func (j JetpackAPIStore) client() secretsv1alpha1connect.SecretsServiceClient {
-	return secretsv1alpha1connect.NewSecretsServiceClient(http.DefaultClient, j.config.host)
-}
-
-func newRequest[T any](message *T, token string) *connect.Request[T] {
-	req := connect.NewRequest(message)
-	req.Header().Set("Authorization", "Bearer "+token)
-	return req
 }
