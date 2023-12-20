@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 
+	"go.jetpack.io/pkg/api"
 	"go.jetpack.io/pkg/auth"
-	"go.jetpack.io/pkg/jetcloud"
 )
 
 func (e *Envsec) authClient() (*auth.Client, error) {
@@ -22,12 +22,12 @@ func (e *Envsec) WhoAmI(
 	w io.Writer,
 	showTokens bool,
 ) error {
-	client, err := e.authClient()
+	authClient, err := e.authClient()
 	if err != nil {
 		return err
 	}
 
-	tok, err := client.GetSession(ctx)
+	tok, err := authClient.GetSession(ctx)
 	if err != nil {
 		return fmt.Errorf("error: %w, run `envsec auth login`", err)
 	}
@@ -49,9 +49,9 @@ func (e *Envsec) WhoAmI(
 		fmt.Fprintf(w, "Name: %s\n", idClaims.Name)
 	}
 
-	apiClient := jetcloud.Client{APIHost: e.APIHost, IsDev: e.IsDev}
+	apiClient := api.NewClient(ctx, e.APIHost, tok)
 
-	member, err := apiClient.GetMember(ctx, tok, tok.IDClaims().Subject)
+	member, err := apiClient.GetMember(ctx, tok.IDClaims().Subject)
 	if err != nil {
 		return err
 	}

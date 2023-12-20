@@ -2,46 +2,104 @@ package envsec
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
-	"fmt"
+	"os"
+	"path/filepath"
 
-	"go.jetpack.io/pkg/jetcloud"
+	"go.jetpack.io/envsec/internal/flow"
+	"go.jetpack.io/envsec/internal/git"
+	"go.jetpack.io/pkg/api"
+	"go.jetpack.io/pkg/id"
+	"go.jetpack.io/typeid"
 )
 
-type InitProjectArgs struct {
-	Force bool
+var ErrProjectAlreadyInitialized = errors.New("project already initialized")
+
+const (
+	dirName       = ".jetpack.io"
+	configName    = "project.json"
+	devConfigName = "dev.project.json"
+)
+
+type projectConfig struct {
+	ProjectID id.ProjectID `json:"project_id"`
+	OrgID     id.OrgID     `json:"org_id"`
 }
 
 func (e *Envsec) NewProject(ctx context.Context, force bool) error {
 	var err error
 
-	client, err := e.authClient()
+	authClient, err := e.authClient()
 	if err != nil {
 		return err
 	}
 
-	tok, err := client.LoginFlowIfNeeded(ctx)
+	tok, err := authClient.LoginFlowIfNeeded(ctx)
 	if err != nil {
 		return err
 	}
 
-	c := jetcloud.Client{APIHost: e.APIHost, IsDev: e.IsDev}
-	projectID, err := c.InitProject(ctx, jetcloud.InitProjectArgs{
-		Dir:    e.WorkingDir,
-		Force:  force,
-		Token:  tok,
-		Stderr: e.Stderr,
-	})
-	if errors.Is(err, jetcloud.ErrProjectAlreadyInitialized) {
-		fmt.Fprintf(
-			e.Stderr,
-			"Warning: project already initialized ID=%s. Use --force to overwrite\n",
-			projectID,
-		)
-	} else if err != nil {
+	projectID, err := (&flow.Init{
+		Client:                api.NewClient(ctx, e.APIHost, tok),
+		PromptOverwriteConfig: !force && e.configExists(),
+		Token:                 tok,
+		WorkingDir:            e.WorkingDir,
+	}).Run(ctx)
+	if err != nil {
 		return err
-	} else {
-		fmt.Fprintf(e.Stderr, "Initialized project ID=%s\n", projectID)
 	}
-	return nil
+
+	dirPath := filepath.Join(e.WorkingDir, dirName)
+	if err = os.MkdirAll(dirPath, 0o700); err != nil {
+		return err
+	}
+
+	if err = git.CreateGitIgnore(dirPath); err != nil {
+		return err
+	}
+
+	orgID, err := typeid.Parse[id.OrgID](tok.IDClaims().OrgID)
+	if err != nil {
+		return err
+	}
+	return e.saveConfig(projectID, orgID)
+}
+
+func (e *Envsec) ProjectConfig(wd string) (*projectConfig, error) {
+	data, err := os.ReadFile(e.configPath(wd))
+	if err != nil {
+		return nil, err
+	}
+	var cfg projectConfig
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		return nil, err
+	}
+	return &cfg, nil
+}
+
+func (e *Envsec) configPath(wd string) string {
+	return filepath.Join(wd, dirName, e.configName())
+}
+
+func (e *Envsec) configName() string {
+	if e.IsDev {
+		return devConfigName
+	}
+	return configName
+}
+
+func (e *Envsec) saveConfig(projectID id.ProjectID, orgID id.OrgID) error {
+	cfg := projectConfig{ProjectID: projectID, OrgID: orgID}
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return err
+	}
+	dirPath := filepath.Join(e.WorkingDir, dirName)
+	return os.WriteFile(filepath.Join(dirPath, e.configName()), data, 0o600)
+}
+
+func (e *Envsec) configExists() bool {
+	_, err := os.Stat(e.configPath(e.WorkingDir))
+	return err == nil
 }

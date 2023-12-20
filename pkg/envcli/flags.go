@@ -10,12 +10,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/envsec"
-	"go.jetpack.io/envsec/internal/build"
 	"go.jetpack.io/envsec/pkg/awsfed"
+	envsecLib "go.jetpack.io/envsec/pkg/envsec"
 	"go.jetpack.io/pkg/auth/session"
 	"go.jetpack.io/pkg/envvar"
 	"go.jetpack.io/pkg/id"
-	"go.jetpack.io/pkg/jetcloud"
 	"go.jetpack.io/typeid"
 )
 
@@ -57,8 +56,9 @@ func (f *configFlags) validateProjectID(orgID id.OrgID) (string, error) {
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	c := jetcloud.Client{APIHost: build.JetpackAPIHost(), IsDev: build.IsDev}
-	config, err := c.ProjectConfig(wd)
+	config, err := (&envsecLib.Envsec{
+		WorkingDir: wd,
+	}).ProjectConfig(wd)
 	if errors.Is(err, os.ErrNotExist) {
 		return "", fmt.Errorf(
 			"project ID not specified. You must run `envsec init` or specify --project-id in this directory",
