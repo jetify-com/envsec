@@ -10,7 +10,7 @@ permissions:
   pull-requests: read
 
 jobs:
-  monorepo-go:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Monorepo
