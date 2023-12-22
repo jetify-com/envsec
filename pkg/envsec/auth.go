@@ -29,7 +29,7 @@ func (e *Envsec) WhoAmI(
 
 	tok, err := authClient.GetSession(ctx)
 	if err != nil {
-		return fmt.Errorf("error: %w, run `envsec auth login`", err)
+		return err
 	}
 
 	idClaims := tok.IDClaims()
