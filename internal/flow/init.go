@@ -9,8 +9,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/manifoldco/promptui"
-	"github.com/samber/lo"
 	"go.jetpack.io/envsec/internal/git"
 	"go.jetpack.io/pkg/api"
 	membersv1alpha1 "go.jetpack.io/pkg/api/gen/priv/members/v1alpha1"
@@ -118,19 +118,11 @@ func (i *Init) showExistingListPrompt(
 
 	prompt := promptui.Select{
 		Label: "What project would you like to link to",
-		Items: lo.Map(projects, func(proj *projectsv1alpha1.Project, _ int) string {
-			item := strings.TrimSpace(proj.GetName())
-			if item == "" {
-				item = "untitled"
-			}
-			if proj.GetRepo() != "" {
-				item += " repo: " + proj.GetRepo()
-			}
-			if proj.GetDirectory() != "" && proj.GetDirectory() != "." {
-				item += " dir: " + proj.GetDirectory()
-			}
-			return item + " id: " + proj.GetId()
-		}),
+		Items: formatProjectItems(projects),
+		Size:  10,
+		Templates: &promptui.SelectTemplates{
+			Active: "\U000025B8 {{ . }}",
+		},
 	}
 
 	idx, _, err := prompt.Run()
@@ -142,8 +134,11 @@ func (i *Init) showExistingListPrompt(
 	if err != nil {
 		return id.ProjectID{}, err
 	}
-
-	fmt.Fprintf(os.Stderr, "Linked to project %s\n", projects[idx].GetName())
+	name := projects[idx].GetName()
+	if name == "" {
+		name = "untitled"
+	}
+	fmt.Fprintf(os.Stderr, "Linked to project %s\n", name)
 	return projectID, nil
 }
 
@@ -224,4 +219,50 @@ func boolPrompt(label, defaultResult string) (bool, error) {
 	}
 
 	return strings.ToLower(result) == "y", nil
+}
+
+func formatProjectItems(projects []*projectsv1alpha1.Project) []string {
+	longestNameLength := 0
+	longestRepoLength := 0
+	longestDirLength := 0
+	for _, proj := range projects {
+		name := proj.GetName()
+		if name == "" {
+			name = "untitled"
+		}
+		if l := len(name); l > longestNameLength {
+			longestNameLength = l
+		}
+		if l := len(proj.GetRepo()); l > longestRepoLength {
+			longestRepoLength = l
+		}
+		if l := len(proj.GetDirectory()); l > longestDirLength {
+			longestDirLength = l
+		}
+	}
+	// Add padding
+	table := make([][]string, len(projects))
+	for idx, proj := range projects {
+		name := proj.GetName()
+		if name == "" {
+			name = "untitled"
+		}
+		table[idx] = []string{
+			color.HiGreenString(
+				fmt.Sprintf("%-"+fmt.Sprintf("%d", longestNameLength)+"s", name),
+			),
+			color.HiBlueString("repo:"),
+			fmt.Sprintf("%-"+fmt.Sprintf("%d", longestRepoLength)+"s", proj.GetRepo()),
+			color.HiBlueString("dir:"),
+			fmt.Sprintf("%-"+fmt.Sprintf("%d", longestDirLength)+"s", proj.GetDirectory()),
+			color.HiBlueString("id:"),
+			proj.GetId(),
+		}
+	}
+
+	rows := []string{}
+	for _, cols := range table {
+		rows = append(rows, strings.Join(cols, " "))
+	}
+	return rows
 }
