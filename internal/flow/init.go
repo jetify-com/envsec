@@ -98,15 +98,9 @@ func (i *Init) linkToExistingPrompt() (bool, error) {
 func (i *Init) showExistingListPrompt(
 	projects []*projectsv1alpha1.Project,
 ) (id.ProjectID, error) {
-	repo, err := git.GitRepoURL(i.WorkingDir)
-	if err != nil {
-		return id.ProjectID{}, err
-	}
-
-	directory, err := git.GitSubdirectory(i.WorkingDir)
-	if err != nil {
-		return id.ProjectID{}, err
-	}
+	// Ignore errors, it's fine if not in repo or git not installed.
+	repo, _ := git.GitRepoURL(i.WorkingDir)
+	directory, _ := git.GitSubdirectory(i.WorkingDir)
 
 	sort.SliceStable(projects, func(i, j int) bool {
 		if projects[i].GetRepo() == repo &&
@@ -167,15 +161,9 @@ func (i *Init) createNewPrompt(
 		return id.ProjectID{}, err
 	}
 
-	repo, err := git.GitRepoURL(i.WorkingDir)
-	if err != nil {
-		return id.ProjectID{}, err
-	}
-
-	directory, err := git.GitSubdirectory(i.WorkingDir)
-	if err != nil {
-		return id.ProjectID{}, err
-	}
+	// Ignore errors, it's fine if not in repo or git not installed.
+	repo, _ := git.GitRepoURL(i.WorkingDir)
+	directory, _ := git.GitSubdirectory(i.WorkingDir)
 
 	project, err := i.Client.CreateProject(
 		ctx,

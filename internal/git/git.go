@@ -18,10 +18,6 @@ func GitRepoURL(wd string) (string, error) {
 	cmd.Dir = wd
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		// Only check this if first call errors to avoid the extra call.
-		if !isInGitRepo(wd) {
-			return "", nil
-		}
 		return "", fmt.Errorf("failed to get git remote origin url: %w", err)
 	}
 	return normalizeGitRepoURL(string(output)), nil
@@ -32,9 +28,6 @@ func GitSubdirectory(wd string) (string, error) {
 	cmd.Dir = wd
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		if !isInGitRepo(wd) {
-			return "", nil
-		}
 		return "", err
 	}
 	return filepath.Clean(strings.TrimSpace(string(output))), nil
@@ -66,7 +59,7 @@ func normalizeGitRepoURL(repoURL string) string {
 	return strings.TrimSuffix(strings.TrimPrefix(result, "www."), ".git")
 }
 
-func isInGitRepo(wd string) bool {
+func IsInGitRepo(wd string) bool {
 	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree")
 	cmd.Dir = wd
 	output, err := cmd.CombinedOutput()
