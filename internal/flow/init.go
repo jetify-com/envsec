@@ -9,8 +9,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
-	"github.com/manifoldco/promptui"
 	"go.jetpack.io/envsec/internal/git"
 	"go.jetpack.io/pkg/api"
 	membersv1alpha1 "go.jetpack.io/pkg/api/gen/priv/members/v1alpha1"
@@ -74,12 +74,12 @@ func (i *Init) confirmSetupProjectPrompt() (bool, error) {
 	if i.PromptOverwriteConfig {
 		return boolPrompt(
 			fmt.Sprintf("Project already exists. Reset project in %s", i.WorkingDir),
-			"n",
+			false,
 		)
 	}
 	return boolPrompt(
 		fmt.Sprintf("Setup project in %s", i.WorkingDir),
-		"y",
+		true,
 	)
 }
 
@@ -92,7 +92,7 @@ func (i *Init) printOrgNotice(member *membersv1alpha1.Member) {
 }
 
 func (i *Init) linkToExistingPrompt() (bool, error) {
-	return boolPrompt("Link to an existing project", "y")
+	return boolPrompt("Link to an existing project", true)
 }
 
 func (i *Init) showExistingListPrompt(
@@ -110,17 +110,13 @@ func (i *Init) showExistingListPrompt(
 		return projects[i].GetRepo() == repo && projects[j].GetRepo() != repo
 	})
 
-	prompt := promptui.Select{
-		Label: "What project would you like to link to",
-		Items: formatProjectItems(projects),
-		Size:  10,
-		Templates: &promptui.SelectTemplates{
-			Active: "\U000025B8 {{ . }}",
-		},
+	prompt := &survey.Select{
+		Message: "What project would you like to link to?",
+		Options: formatProjectItems(projects),
 	}
 
-	idx, _, err := prompt.Run()
-	if err != nil {
+	idx := 0
+	if err := survey.AskOne(prompt, &idx); err != nil {
 		return id.ProjectID{}, err
 	}
 
@@ -140,19 +136,13 @@ func (i *Init) createNewPrompt(
 	ctx context.Context,
 	member *membersv1alpha1.Member,
 ) (id.ProjectID, error) {
-	prompt := promptui.Prompt{
-		Label:   "What’s the name of your new project",
+	prompt := &survey.Input{
+		Message: "What’s the name of your new project?",
 		Default: filepath.Base(i.WorkingDir),
-		Validate: func(name string) error {
-			if strings.TrimSpace(name) == "" {
-				return errors.New("project name cannot be empty")
-			}
-			return nil
-		},
 	}
 
-	name, err := prompt.Run()
-	if err != nil {
+	name := ""
+	if err := survey.AskOne(prompt, &name); err != nil {
 		return id.ProjectID{}, err
 	}
 
@@ -190,29 +180,17 @@ func (i *Init) createNewPrompt(
 	return projectID, nil
 }
 
-func boolPrompt(label, defaultResult string) (bool, error) {
-	prompt := promptui.Prompt{
-		Label:     label,
-		IsConfirm: true,
-		Default:   defaultResult,
+func boolPrompt(label string, defaultResult bool) (bool, error) {
+	result := false
+	prompt := &survey.Confirm{
+		Message: label,
+		Default: defaultResult,
 	}
-
-	result, err := prompt.Run()
-	// promptui.ErrAbort is returned when user enters "n" which is valid.
-	if err != nil && !errors.Is(err, promptui.ErrAbort) {
-		return false, err
-	}
-	if result == "" {
-		result = defaultResult
-	}
-
-	return strings.ToLower(result) == "y", nil
+	return result, survey.AskOne(prompt, &result)
 }
 
 func formatProjectItems(projects []*projectsv1alpha1.Project) []string {
 	longestNameLength := 0
-	longestRepoLength := 0
-	longestDirLength := 0
 	for _, proj := range projects {
 		name := proj.GetName()
 		if name == "" {
@@ -221,28 +199,19 @@ func formatProjectItems(projects []*projectsv1alpha1.Project) []string {
 		if l := len(name); l > longestNameLength {
 			longestNameLength = l
 		}
-		if l := len(proj.GetRepo()); l > longestRepoLength {
-			longestRepoLength = l
-		}
-		if l := len(proj.GetDirectory()); l > longestDirLength {
-			longestDirLength = l
-		}
 	}
 	// Add padding
 	table := make([][]string, len(projects))
 	for idx, proj := range projects {
-		name := proj.GetName()
+		name := strings.TrimSpace(proj.GetName())
 		if name == "" {
 			name = "untitled"
 		}
+
 		table[idx] = []string{
 			color.HiGreenString(
 				fmt.Sprintf("%-"+fmt.Sprintf("%d", longestNameLength)+"s", name),
 			),
-			color.HiBlueString("repo:"),
-			fmt.Sprintf("%-"+fmt.Sprintf("%d", longestRepoLength)+"s", proj.GetRepo()),
-			color.HiBlueString("dir:"),
-			fmt.Sprintf("%-"+fmt.Sprintf("%d", longestDirLength)+"s", proj.GetDirectory()),
 			color.HiBlueString("id:"),
 			proj.GetId(),
 		}
