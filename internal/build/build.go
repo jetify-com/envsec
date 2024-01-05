@@ -5,18 +5,25 @@ package build
 
 import (
 	"os"
-	"strconv"
+	"strings"
 )
-
-var forceProd, _ = strconv.ParseBool(os.Getenv("ENVSEC_PROD"))
 
 // These variables are set by the build script.
 var (
-	IsDev      = Version == "0.0.0-dev" && !forceProd
+	IsDev      = Version == "0.0.0-dev"
 	Version    = "0.0.0-dev"
 	Commit     = "none"
 	CommitDate = "unknown"
 )
+
+func init() {
+	buildEnv := strings.ToLower(os.Getenv("ENVSEC_BUILD_ENV"))
+	if buildEnv == "prod" {
+		IsDev = false
+	} else if buildEnv == "dev" {
+		IsDev = true
+	}
+}
 
 func Issuer() string {
 	if IsDev {
@@ -37,4 +44,11 @@ func JetpackAPIHost() string {
 		return "https://api.jetpack.dev"
 	}
 	return "https://api.jetpack.io"
+}
+
+func BuildEnv() string {
+	if IsDev {
+		return "dev"
+	}
+	return "prod"
 }

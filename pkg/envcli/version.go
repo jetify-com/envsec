@@ -36,6 +36,7 @@ func versionCmdFunc(cmd *cobra.Command, _ []string, flags versionFlags) error {
 	w := cmd.OutOrStdout()
 	if flags.verbose {
 		fmt.Fprintf(w, "Version:     %v\n", build.Version)
+		fmt.Fprintf(w, "Build Env:   %v\n", build.BuildEnv())
 		fmt.Fprintf(w, "Platform:    %v\n", fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH))
 		fmt.Fprintf(w, "Commit:      %v\n", build.Commit)
 		fmt.Fprintf(w, "Commit Time: %v\n", build.CommitDate)
