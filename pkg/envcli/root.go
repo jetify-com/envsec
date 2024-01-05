@@ -57,6 +57,7 @@ func RootCmd(flags *rootCmdFlags) *cobra.Command {
 	command.AddCommand(genDocsCmd())
 	command.AddCommand(initCmd())
 	command.AddCommand(ListCmd())
+	command.AddCommand(infoCmd())
 	command.AddCommand(RemoveCmd())
 	command.AddCommand(SetCmd())
 	command.AddCommand(UploadCmd())

@@ -5,6 +5,7 @@ package envcli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"go.jetpack.io/envsec/internal/build"
@@ -80,7 +81,11 @@ func whoAmICmd() *cobra.Command {
 		Short: "Show the current user",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return defaultEnvsec(cmd).
+			workingDir, err := os.Getwd()
+			if err != nil {
+				return err
+			}
+			return defaultEnvsec(cmd, workingDir).
 				WhoAmI(cmd.Context(), cmd.OutOrStdout(), flags.showTokens)
 		},
 	}

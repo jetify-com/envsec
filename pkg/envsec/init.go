@@ -14,7 +14,10 @@ import (
 	"go.jetpack.io/typeid"
 )
 
-var ErrProjectAlreadyInitialized = errors.New("project already initialized")
+var (
+	ErrProjectAlreadyInitialized = errors.New("project already initialized")
+	errProjectNotInitialized     = errors.New("project not initialized")
+)
 
 const (
 	dirName       = ".jetpack.io"
@@ -66,9 +69,11 @@ func (e *Envsec) NewProject(ctx context.Context, force bool) error {
 	return e.saveConfig(projectID, orgID)
 }
 
-func (e *Envsec) ProjectConfig(wd string) (*projectConfig, error) {
-	data, err := os.ReadFile(e.configPath(wd))
-	if err != nil {
+func (e *Envsec) ProjectConfig() (*projectConfig, error) {
+	data, err := os.ReadFile(e.configPath(e.WorkingDir))
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, errProjectNotInitialized
+	} else if err != nil {
 		return nil, err
 	}
 	var cfg projectConfig

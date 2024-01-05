@@ -60,7 +60,7 @@ func (f *configFlags) validateProjectID(orgID id.OrgID) (string, error) {
 	config, err := (&envsecLib.Envsec{
 		WorkingDir: wd,
 		IsDev:      build.IsDev,
-	}).ProjectConfig(wd)
+	}).ProjectConfig()
 	if errors.Is(err, os.ErrNotExist) {
 		return "", fmt.Errorf(
 			"project ID not specified. You must run `envsec init` or specify --project-id in this directory",
@@ -101,7 +101,20 @@ func (f *configFlags) genConfig(cmd *cobra.Command) (*CmdConfig, error) {
 			return nil, err
 		}
 
-		tok, err = client.GetSession(ctx)
+		wd, err := os.Getwd()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		// This is a bit of a temporary hack. Ideally get,set,list logic moves
+		// into envsec lib and it will choose correct credentials based on org.
+		// It will also take flags that override project and organization.
+		project, _ := defaultEnvsec(cmd, wd).ProjectConfig()
+
+		if project != nil {
+			tok, err = client.LoginFlowIfNeededForOrg(ctx, project.OrgID.String())
+		} else {
+			tok, err = client.LoginFlowIfNeeded(ctx)
+		}
 		if err != nil {
 			return nil, fmt.Errorf(
 				"error: %w. To use envsec you must log in (`envsec auth login`) or specify --project-id and --org-id",
