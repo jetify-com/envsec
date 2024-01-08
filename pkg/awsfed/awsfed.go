@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
 	"github.com/pkg/errors"
-	"go.jetpack.io/envsec"
+	"go.jetpack.io/envsec/pkg/stores/ssmstore"
 	"go.jetpack.io/pkg/auth/session"
 	"go.jetpack.io/pkg/envvar"
 	"go.jetpack.io/pkg/filecache"
@@ -126,9 +126,9 @@ func GenSSMConfigFromToken(
 	ctx context.Context,
 	tok *session.Token,
 	useCache bool,
-) (*envsec.SSMConfig, error) {
+) (*ssmstore.SSMConfig, error) {
 	if tok == nil {
-		return &envsec.SSMConfig{}, nil
+		return &ssmstore.SSMConfig{}, nil
 	}
 	fed := New()
 	var creds *types.Credentials
@@ -141,7 +141,7 @@ func GenSSMConfigFromToken(
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	return &envsec.SSMConfig{
+	return &ssmstore.SSMConfig{
 		AccessKeyID:     *creds.AccessKeyId,
 		SecretAccessKey: *creds.SecretKey,
 		SessionToken:    *creds.SessionToken,

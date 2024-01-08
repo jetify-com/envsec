@@ -11,7 +11,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/envsec"
+	"go.jetpack.io/envsec/pkg/envsec"
 )
 
 type execCmdFlags struct {

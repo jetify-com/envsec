@@ -4,9 +4,10 @@
 package envcli
 
 import (
-	"github.com/pkg/errors"
+	"os"
+
 	"github.com/spf13/cobra"
-	"go.jetpack.io/envsec"
+	"go.jetpack.io/envsec/pkg/envsec"
 )
 
 const environmentFlagName = "environment"
@@ -32,24 +33,31 @@ func ListCmd() *cobra.Command {
 				return err
 			}
 
-			// TODO: parallelize
+			envIDs := []envsec.EnvID{}
 			for _, envName := range cmdCfg.EnvNames {
-				envID := envsec.EnvID{
+				envIDs = append(envIDs, envsec.EnvID{
 					OrgID:     cmdCfg.EnvID.OrgID,
 					ProjectID: cmdCfg.EnvID.ProjectID,
 					EnvName:   envName,
-				}
-				envVars, err := cmdCfg.Store.List(cmd.Context(), envID)
-				if err != nil {
-					return errors.WithStack(err)
-				}
-
-				err = printEnv(cmd, envID, envVars, flags.ShowValues, flags.Format)
-				if err != nil {
-					return errors.WithStack(err)
-				}
+				})
 			}
-			return nil
+
+			wd, err := os.Getwd()
+			if err != nil {
+				return err
+			}
+
+			vars, err := defaultEnvsec(cmd, wd).List(
+				cmd.Context(),
+				cmdCfg.Store,
+				envIDs...,
+			)
+			if err != nil {
+				return err
+			}
+
+			return envsec.PrintEnvVars(
+				vars, cmd.OutOrStdout(), flags.ShowValues, flags.Format)
 		},
 	}
 
@@ -65,7 +73,7 @@ func ListCmd() *cobra.Command {
 		"format",
 		"f",
 		"table",
-		"Display the key values in key=value format",
+		"Display the key values in key=value format. Must be one of: table | dotenv | json",
 	)
 	flags.configFlags.register(command)
 

@@ -9,10 +9,11 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/envsec"
 	"go.jetpack.io/envsec/internal/build"
 	"go.jetpack.io/envsec/pkg/awsfed"
-	envsecLib "go.jetpack.io/envsec/pkg/envsec"
+	"go.jetpack.io/envsec/pkg/envsec"
+	"go.jetpack.io/envsec/pkg/stores/jetstore"
+	"go.jetpack.io/envsec/pkg/stores/ssmstore"
 	"go.jetpack.io/pkg/auth/session"
 	"go.jetpack.io/pkg/envvar"
 	"go.jetpack.io/pkg/id"
@@ -57,7 +58,7 @@ func (f *configFlags) validateProjectID(orgID id.OrgID) (string, error) {
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	config, err := (&envsecLib.Envsec{
+	config, err := (&envsec.Envsec{
 		WorkingDir: wd,
 		IsDev:      build.IsDev,
 	}).ProjectConfig()
@@ -95,20 +96,22 @@ func (f *configFlags) genConfig(cmd *cobra.Command) (*CmdConfig, error) {
 	var tok *session.Token
 	var err error
 
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	envsecInstance := defaultEnvsec(cmd, wd)
+
 	if f.orgID == "" {
 		client, err := newAuthClient()
 		if err != nil {
 			return nil, err
 		}
 
-		wd, err := os.Getwd()
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
 		// This is a bit of a temporary hack. Ideally get,set,list logic moves
 		// into envsec lib and it will choose correct credentials based on org.
 		// It will also take flags that override project and organization.
-		project, _ := defaultEnvsec(cmd, wd).ProjectConfig()
+		project, _ := envsecInstance.ProjectConfig()
 
 		if project != nil {
 			tok, err = client.LoginFlowIfNeededForOrg(ctx, project.OrgID.String())
@@ -130,16 +133,15 @@ func (f *configFlags) genConfig(cmd *cobra.Command) (*CmdConfig, error) {
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		store, err = envsec.NewStore(ctx, ssmConfig)
+		store, err = ssmstore.New(ctx, ssmConfig)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 	} else {
-		store, err = envsec.NewStore(ctx, envsec.NewJetpackAPIConfig(tok))
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
+		store = &jetstore.JetpackAPIStore{}
 	}
+
+	store.Identify(ctx, envsecInstance, tok)
 
 	if err != nil {
 		return nil, errors.WithStack(err)

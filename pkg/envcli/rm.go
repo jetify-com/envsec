@@ -8,8 +8,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/envsec"
 	"go.jetpack.io/envsec/internal/tux"
+	"go.jetpack.io/envsec/pkg/stores/ssmstore"
 )
 
 type removeCmdFlags struct {
@@ -37,7 +37,7 @@ func RemoveCmd() *cobra.Command {
 					strings.ToLower(cmdCfg.EnvID.EnvName),
 				)
 			}
-			if errors.Is(err, envsec.FaultyParamError) {
+			if errors.Is(err, ssmstore.FaultyParamError) {
 				err = tux.WriteHeader(cmd.OutOrStdout(),
 					"[CANCELLED] Could not delete variable '%v' in environment: %s.\n"+
 						"Please make sure all listed variables exist and you have proper permission to remove them.\n",

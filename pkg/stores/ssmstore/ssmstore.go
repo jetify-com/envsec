@@ -1,7 +1,7 @@
 // Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package envsec
+package ssmstore
 
 import (
 	"context"
@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/envsec/pkg/envsec"
+	"go.jetpack.io/pkg/auth/session"
 )
 
 type SSMStore struct {
@@ -17,9 +19,9 @@ type SSMStore struct {
 }
 
 // SSMStore implements interface Store (compile-time check)
-var _ Store = (*SSMStore)(nil)
+var _ envsec.Store = (*SSMStore)(nil)
 
-func newSSMStore(ctx context.Context, config *SSMConfig) (*SSMStore, error) {
+func New(ctx context.Context, config *SSMConfig) (*SSMStore, error) {
 	paramStore, err := newParameterStore(ctx, config)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -30,14 +32,18 @@ func newSSMStore(ctx context.Context, config *SSMConfig) (*SSMStore, error) {
 	return store, nil
 }
 
-func (s *SSMStore) List(ctx context.Context, envID EnvID) ([]EnvVar, error) {
+func (s *SSMStore) Identify(context.Context, *envsec.Envsec, *session.Token) {
+	// TODO: implement
+}
+
+func (s *SSMStore) List(ctx context.Context, envID envsec.EnvID) ([]envsec.EnvVar, error) {
 	if s.store.config.hasDefaultPaths() {
 		return s.store.listByPath(ctx, envID)
 	}
 	return s.store.listByTags(ctx, envID)
 }
 
-func (s *SSMStore) Get(ctx context.Context, envID EnvID, name string) (string, error) {
+func (s *SSMStore) Get(ctx context.Context, envID envsec.EnvID, name string) (string, error) {
 	vars, err := s.GetAll(ctx, envID, []string{name})
 	if err != nil {
 		return "", errors.WithStack(err)
@@ -48,13 +54,13 @@ func (s *SSMStore) Get(ctx context.Context, envID EnvID, name string) (string, e
 	return vars[0].Value, nil
 }
 
-func (s *SSMStore) GetAll(ctx context.Context, envID EnvID, names []string) ([]EnvVar, error) {
+func (s *SSMStore) GetAll(ctx context.Context, envID envsec.EnvID, names []string) ([]envsec.EnvVar, error) {
 	return s.store.getAll(ctx, envID, names)
 }
 
 func (s *SSMStore) Set(
 	ctx context.Context,
-	envID EnvID,
+	envID envsec.EnvID,
 	name string,
 	value string,
 ) error {
@@ -69,7 +75,7 @@ func (s *SSMStore) Set(
 	return s.store.newParameter(ctx, parameter, value)
 }
 
-func (s *SSMStore) SetAll(ctx context.Context, envID EnvID, values map[string]string) error {
+func (s *SSMStore) SetAll(ctx context.Context, envID envsec.EnvID, values map[string]string) error {
 	// For now we implement by issuing multiple calls to Set()
 	// Make more efficient either by implementing a batch call to the underlying API, or
 	// by concurrently calling Set()
@@ -84,15 +90,15 @@ func (s *SSMStore) SetAll(ctx context.Context, envID EnvID, values map[string]st
 	return multiErr
 }
 
-func (s *SSMStore) Delete(ctx context.Context, envID EnvID, name string) error {
+func (s *SSMStore) Delete(ctx context.Context, envID envsec.EnvID, name string) error {
 	return s.DeleteAll(ctx, envID, []string{name})
 }
 
-func (s *SSMStore) DeleteAll(ctx context.Context, envID EnvID, names []string) error {
+func (s *SSMStore) DeleteAll(ctx context.Context, envID envsec.EnvID, names []string) error {
 	return s.store.deleteAll(ctx, envID, names)
 }
 
-func buildTags(envID EnvID, varName string) []types.Tag {
+func buildTags(envID envsec.EnvID, varName string) []types.Tag {
 	tags := []types.Tag{}
 	if envID.ProjectID != "" {
 		tags = append(tags, types.Tag{

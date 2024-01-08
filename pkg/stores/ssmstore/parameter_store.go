@@ -1,7 +1,7 @@
 // Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package envsec
+package ssmstore
 
 import (
 	"context"
@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/envsec/pkg/envsec"
 	"golang.org/x/text/collate"
 	"golang.org/x/text/language"
 )
@@ -110,7 +111,7 @@ func (s *parameterStore) overwriteParameterValue(ctx context.Context, v *paramet
 	return errors.WithStack(err)
 }
 
-func (s *parameterStore) listByPath(ctx context.Context, id EnvID) ([]EnvVar, error) {
+func (s *parameterStore) listByPath(ctx context.Context, id envsec.EnvID) ([]envsec.EnvVar, error) {
 	// Create the request object:
 	req := &ssm.GetParametersByPathInput{
 		Path:           aws.String(s.config.varPath(id, "")),
@@ -119,7 +120,7 @@ func (s *parameterStore) listByPath(ctx context.Context, id EnvID) ([]EnvVar, er
 	}
 
 	// Start with empty results
-	results := []EnvVar{}
+	results := []envsec.EnvVar{}
 
 	// Paginate through the results:
 	paginator := ssm.NewGetParametersByPathPaginator(s.client, req)
@@ -133,7 +134,7 @@ func (s *parameterStore) listByPath(ctx context.Context, id EnvID) ([]EnvVar, er
 		// Append results:
 		params := resp.Parameters
 		for _, p := range params {
-			results = append(results, EnvVar{
+			results = append(results, envsec.EnvVar{
 				Name:  nameFromPath(aws.ToString(p.Name)),
 				Value: awsSSMParamStoreValueToString(p.Value),
 			})
@@ -144,7 +145,7 @@ func (s *parameterStore) listByPath(ctx context.Context, id EnvID) ([]EnvVar, er
 	return results, nil
 }
 
-func (s *parameterStore) listByTags(ctx context.Context, envID EnvID) ([]EnvVar, error) {
+func (s *parameterStore) listByTags(ctx context.Context, envID envsec.EnvID) ([]envsec.EnvVar, error) {
 	// Create the request object:
 	req := &ssm.DescribeParametersInput{
 		ParameterFilters: s.buildFilters(envID),
@@ -157,7 +158,7 @@ func (s *parameterStore) listByTags(ctx context.Context, envID EnvID) ([]EnvVar,
 		// Issue the request for the next page:
 		resp, err := paginator.NextPage(ctx)
 		if err != nil {
-			return []EnvVar{}, errors.WithStack(err)
+			return []envsec.EnvVar{}, errors.WithStack(err)
 		}
 		// Append results:
 		for _, p := range resp.Parameters {
@@ -170,7 +171,7 @@ func (s *parameterStore) listByTags(ctx context.Context, envID EnvID) ([]EnvVar,
 	return s.getAll(ctx, envID, varNames)
 }
 
-func (s *parameterStore) buildFilters(envID EnvID) []types.ParameterStringFilter {
+func (s *parameterStore) buildFilters(envID envsec.EnvID) []types.ParameterStringFilter {
 	filters := []types.ParameterStringFilter{
 		{
 			Key:    lo.ToPtr("Path"),
@@ -200,9 +201,9 @@ func (s *parameterStore) buildFilters(envID EnvID) []types.ParameterStringFilter
 	return filters
 }
 
-func (s *parameterStore) getAll(ctx context.Context, envID EnvID, varNames []string) ([]EnvVar, error) {
+func (s *parameterStore) getAll(ctx context.Context, envID envsec.EnvID, varNames []string) ([]envsec.EnvVar, error) {
 	// Start with empty results
-	results := []EnvVar{}
+	results := []envsec.EnvVar{}
 	paths := lo.Map(varNames, func(name string, _ int) string {
 		return s.config.varPath(envID, name)
 	})
@@ -226,7 +227,7 @@ func (s *parameterStore) getAll(ctx context.Context, envID EnvID, varNames []str
 
 		// Append results:
 		for _, p := range resp.Parameters {
-			results = append(results, EnvVar{
+			results = append(results, envsec.EnvVar{
 				Name:  nameFromPath(aws.ToString(p.Name)),
 				Value: awsSSMParamStoreValueToString(p.Value),
 			})
@@ -236,7 +237,7 @@ func (s *parameterStore) getAll(ctx context.Context, envID EnvID, varNames []str
 	return results, nil
 }
 
-func (s *parameterStore) deleteAll(ctx context.Context, envID EnvID, varNames []string) error {
+func (s *parameterStore) deleteAll(ctx context.Context, envID envsec.EnvID, varNames []string) error {
 	paths := lo.Map(varNames, func(name string, _ int) string {
 		return s.config.varPath(envID, name)
 	})
@@ -268,7 +269,7 @@ func (s *parameterStore) deleteAll(ctx context.Context, envID EnvID, varNames []
 }
 
 // Implement interface Lister from text/collate
-type envVars []EnvVar
+type envVars []envsec.EnvVar
 
 func (e envVars) Len() int {
 	return len(e)
@@ -307,4 +308,12 @@ func awsSSMParamStoreValueToString(s *string) string {
 		return ""
 	}
 	return *s
+}
+
+func nameFromPath(path string) string {
+	subpaths := strings.Split(path, "/")
+	if len(subpaths) == 0 {
+		return ""
+	}
+	return subpaths[len(subpaths)-1]
 }

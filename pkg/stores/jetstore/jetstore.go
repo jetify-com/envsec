@@ -1,12 +1,14 @@
-package envsec
+package jetstore
 
 import (
 	"context"
 
 	"connectrpc.com/connect"
+	"go.jetpack.io/envsec/pkg/envsec"
 	"go.jetpack.io/pkg/api"
 	secretsv1alpha1 "go.jetpack.io/pkg/api/gen/priv/secrets/v1alpha1"
 	"go.jetpack.io/pkg/api/gen/priv/secrets/v1alpha1/secretsv1alpha1connect"
+	"go.jetpack.io/pkg/auth/session"
 )
 
 type JetpackAPIStore struct {
@@ -14,15 +16,17 @@ type JetpackAPIStore struct {
 }
 
 // JetpackAPIStore implements interface Store (compile-time check)
-var _ Store = (*JetpackAPIStore)(nil)
+var _ envsec.Store = (*JetpackAPIStore)(nil)
 
-func newJetpackAPIStore(ctx context.Context, config *JetpackAPIConfig) *JetpackAPIStore {
-	return &JetpackAPIStore{
-		client: api.NewClient(ctx, config.host, config.token).SecretsService(),
-	}
+func (j *JetpackAPIStore) Identify(
+	ctx context.Context,
+	e *envsec.Envsec,
+	token *session.Token,
+) {
+	j.client = api.NewClient(ctx, e.APIHost, token).SecretsService()
 }
 
-func (j JetpackAPIStore) List(ctx context.Context, envID EnvID) ([]EnvVar, error) {
+func (j JetpackAPIStore) List(ctx context.Context, envID envsec.EnvID) ([]envsec.EnvVar, error) {
 	resp, err := j.client.ListSecrets(
 		ctx,
 		connect.NewRequest(&secretsv1alpha1.ListSecretsRequest{ProjectId: envID.ProjectID}),
@@ -30,11 +34,11 @@ func (j JetpackAPIStore) List(ctx context.Context, envID EnvID) ([]EnvVar, error
 	if err != nil {
 		return nil, err
 	}
-	result := []EnvVar{}
+	result := []envsec.EnvVar{}
 	for _, secret := range resp.Msg.Secrets {
 		if v := secret.EnvironmentValues[envID.EnvName]; len(v) > 0 {
 			result = append(
-				result, EnvVar{
+				result, envsec.EnvVar{
 					Name:  secret.Name,
 					Value: string(v),
 				},
@@ -44,7 +48,7 @@ func (j JetpackAPIStore) List(ctx context.Context, envID EnvID) ([]EnvVar, error
 	return result, nil
 }
 
-func (j JetpackAPIStore) Set(ctx context.Context, envID EnvID, name string, value string) error {
+func (j JetpackAPIStore) Set(ctx context.Context, envID envsec.EnvID, name string, value string) error {
 	_, err := j.client.PatchSecret(
 		ctx, connect.NewRequest(
 			&secretsv1alpha1.PatchSecretRequest{
@@ -61,7 +65,7 @@ func (j JetpackAPIStore) Set(ctx context.Context, envID EnvID, name string, valu
 	return err
 }
 
-func (j JetpackAPIStore) SetAll(ctx context.Context, envID EnvID, values map[string]string) error {
+func (j JetpackAPIStore) SetAll(ctx context.Context, envID envsec.EnvID, values map[string]string) error {
 	patchActions := []*secretsv1alpha1.Action{}
 	for name, value := range values {
 		patchActions = append(
@@ -87,7 +91,7 @@ func (j JetpackAPIStore) SetAll(ctx context.Context, envID EnvID, values map[str
 	return err
 }
 
-func (j JetpackAPIStore) Get(ctx context.Context, envID EnvID, name string) (string, error) {
+func (j JetpackAPIStore) Get(ctx context.Context, envID envsec.EnvID, name string) (string, error) {
 	vars, err := j.List(ctx, envID)
 	if err != nil {
 		return "", err
@@ -100,12 +104,12 @@ func (j JetpackAPIStore) Get(ctx context.Context, envID EnvID, name string) (str
 	return "", nil
 }
 
-func (j JetpackAPIStore) GetAll(ctx context.Context, envID EnvID, names []string) ([]EnvVar, error) {
+func (j JetpackAPIStore) GetAll(ctx context.Context, envID envsec.EnvID, names []string) ([]envsec.EnvVar, error) {
 	vars, err := j.List(ctx, envID)
 	if err != nil {
 		return nil, err
 	}
-	result := []EnvVar{}
+	result := []envsec.EnvVar{}
 	for _, v := range vars {
 		for _, name := range names {
 			if v.Name == name {
@@ -116,7 +120,7 @@ func (j JetpackAPIStore) GetAll(ctx context.Context, envID EnvID, names []string
 	return result, nil
 }
 
-func (j JetpackAPIStore) Delete(ctx context.Context, envID EnvID, name string) error {
+func (j JetpackAPIStore) Delete(ctx context.Context, envID envsec.EnvID, name string) error {
 	_, err := j.client.DeleteSecret(
 		ctx, connect.NewRequest(
 			&secretsv1alpha1.DeleteSecretRequest{
@@ -129,7 +133,7 @@ func (j JetpackAPIStore) Delete(ctx context.Context, envID EnvID, name string) e
 	return err
 }
 
-func (j JetpackAPIStore) DeleteAll(ctx context.Context, envID EnvID, names []string) error {
+func (j JetpackAPIStore) DeleteAll(ctx context.Context, envID envsec.EnvID, names []string) error {
 	deleteActions := []*secretsv1alpha1.Action{}
 	for _, name := range names {
 		deleteActions = append(
