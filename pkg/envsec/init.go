@@ -33,7 +33,7 @@ type projectConfig struct {
 func (e *Envsec) NewProject(ctx context.Context, force bool) error {
 	var err error
 
-	authClient, err := e.authClient()
+	authClient, err := e.AuthClient()
 	if err != nil {
 		return err
 	}

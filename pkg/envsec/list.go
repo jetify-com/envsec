@@ -16,14 +16,13 @@ type results map[EnvID][]EnvVar
 
 func (e *Envsec) List(
 	ctx context.Context,
-	store Store,
 	envIDs ...EnvID,
 ) (results, error) {
 	var err error
 	results := map[EnvID][]EnvVar{}
 	for _, envID := range envIDs {
 		// TODO: parallelize
-		results[envID], err = store.List(ctx, envID)
+		results[envID], err = e.store.List(ctx, envID)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}

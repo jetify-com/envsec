@@ -82,9 +82,9 @@ func (f *configFlags) validateProjectID(orgID id.OrgID) (string, error) {
 }
 
 type CmdConfig struct {
-	Store    envsec.Store
-	EnvID    envsec.EnvID
-	EnvNames []string
+	envsec   *envsec.Envsec
+	envID    envsec.EnvID
+	envNames []string
 }
 
 func (f *configFlags) genConfig(cmd *cobra.Command) (*CmdConfig, error) {
@@ -102,30 +102,6 @@ func (f *configFlags) genConfig(cmd *cobra.Command) (*CmdConfig, error) {
 	}
 	envsecInstance := defaultEnvsec(cmd, wd)
 
-	if f.orgID == "" {
-		client, err := newAuthClient()
-		if err != nil {
-			return nil, err
-		}
-
-		// This is a bit of a temporary hack. Ideally get,set,list logic moves
-		// into envsec lib and it will choose correct credentials based on org.
-		// It will also take flags that override project and organization.
-		project, _ := envsecInstance.ProjectConfig()
-
-		if project != nil {
-			tok, err = client.LoginFlowIfNeededForOrg(ctx, project.OrgID.String())
-		} else {
-			tok, err = client.LoginFlowIfNeeded(ctx)
-		}
-		if err != nil {
-			return nil, fmt.Errorf(
-				"error: %w. To use envsec you must log in (`envsec auth login`) or specify --project-id and --org-id",
-				err,
-			)
-		}
-	}
-
 	var store envsec.Store
 	if envvar.Bool("ENVSEC_USE_AWS_STORE") {
 		// Temporary hack to enable the AWS store
@@ -141,7 +117,9 @@ func (f *configFlags) genConfig(cmd *cobra.Command) (*CmdConfig, error) {
 		store = &jetstore.JetpackAPIStore{}
 	}
 
-	store.Identify(ctx, envsecInstance, tok)
+	if err = envsecInstance.SetStore(ctx, store); err != nil {
+		return nil, errors.WithStack(err)
+	}
 
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -172,9 +150,9 @@ func (f *configFlags) genConfig(cmd *cobra.Command) (*CmdConfig, error) {
 	}
 
 	return &CmdConfig{
-		Store:    store,
-		EnvID:    envid,
-		EnvNames: envNames,
+		envsec:   envsecInstance,
+		envID:    envid,
+		envNames: envNames,
 	}, nil
 }
 

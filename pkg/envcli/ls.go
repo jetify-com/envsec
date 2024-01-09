@@ -4,8 +4,6 @@
 package envcli
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 	"go.jetpack.io/envsec/pkg/envsec"
 )
@@ -34,22 +32,16 @@ func ListCmd() *cobra.Command {
 			}
 
 			envIDs := []envsec.EnvID{}
-			for _, envName := range cmdCfg.EnvNames {
+			for _, envName := range cmdCfg.envNames {
 				envIDs = append(envIDs, envsec.EnvID{
-					OrgID:     cmdCfg.EnvID.OrgID,
-					ProjectID: cmdCfg.EnvID.ProjectID,
+					OrgID:     cmdCfg.envID.OrgID,
+					ProjectID: cmdCfg.envID.ProjectID,
 					EnvName:   envName,
 				})
 			}
 
-			wd, err := os.Getwd()
-			if err != nil {
-				return err
-			}
-
-			vars, err := defaultEnvsec(cmd, wd).List(
+			vars, err := cmdCfg.envsec.List(
 				cmd.Context(),
-				cmdCfg.Store,
 				envIDs...,
 			)
 			if err != nil {

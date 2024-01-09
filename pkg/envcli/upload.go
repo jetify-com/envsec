@@ -7,12 +7,10 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/envsec/internal/tux"
 )
 
 var errUnsupportedFormat = errors.New("unsupported format")
@@ -78,22 +76,8 @@ func UploadCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			err = SetEnvMap(cmd.Context(), cmdCfg.Store, cmdCfg.EnvID, envMap)
-			if err != nil {
-				return errors.WithStack(err)
-			}
 
-			err = tux.WriteHeader(cmd.OutOrStdout(),
-				"[DONE] Uploaded %d environment variable(s) from %s %v to environment: %s\n",
-				len(envMap),
-				tux.Plural(relativeFilePaths, "file", "files"),
-				strings.Join(tux.QuotedTerms(relativeFilePaths), ", "),
-				strings.ToLower(cmdCfg.EnvID.EnvName),
-			)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-			return nil
+			return cmdCfg.envsec.SetMap(cmd.Context(), cmdCfg.envID, envMap)
 		},
 	}
 

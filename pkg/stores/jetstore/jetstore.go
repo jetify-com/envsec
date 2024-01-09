@@ -8,7 +8,6 @@ import (
 	"go.jetpack.io/pkg/api"
 	secretsv1alpha1 "go.jetpack.io/pkg/api/gen/priv/secrets/v1alpha1"
 	"go.jetpack.io/pkg/api/gen/priv/secrets/v1alpha1/secretsv1alpha1connect"
-	"go.jetpack.io/pkg/auth/session"
 )
 
 type JetpackAPIStore struct {
@@ -20,10 +19,24 @@ var _ envsec.Store = (*JetpackAPIStore)(nil)
 
 func (j *JetpackAPIStore) Identify(
 	ctx context.Context,
-	e *envsec.Envsec,
-	token *session.Token,
-) {
-	j.client = api.NewClient(ctx, e.APIHost, token).SecretsService()
+	envsec *envsec.Envsec,
+) error {
+	project, err := envsec.ProjectConfig()
+	if project == nil {
+		return err
+	}
+
+	authClient, err := envsec.AuthClient()
+	if err != nil {
+		return err
+	}
+
+	tok, err := authClient.LoginFlowIfNeededForOrg(ctx, project.OrgID.String())
+	if err != nil {
+		return err
+	}
+	j.client = api.NewClient(ctx, envsec.APIHost, tok).SecretsService()
+	return nil
 }
 
 func (j JetpackAPIStore) List(ctx context.Context, envID envsec.EnvID) ([]envsec.EnvVar, error) {

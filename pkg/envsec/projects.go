@@ -19,7 +19,7 @@ func (e *Envsec) DescribeCurrentProject(
 		return err
 	}
 
-	authClient, err := e.authClient()
+	authClient, err := e.AuthClient()
 	if err != nil {
 		return err
 	}

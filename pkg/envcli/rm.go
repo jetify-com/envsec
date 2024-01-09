@@ -4,12 +4,8 @@
 package envcli
 
 import (
-	"strings"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/envsec/internal/tux"
-	"go.jetpack.io/envsec/pkg/stores/ssmstore"
 )
 
 type removeCmdFlags struct {
@@ -28,27 +24,7 @@ func RemoveCmd() *cobra.Command {
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			err = cmdCfg.Store.DeleteAll(cmd.Context(), cmdCfg.EnvID, envNames)
-			if err == nil {
-				err = tux.WriteHeader(cmd.OutOrStdout(),
-					"[DONE] Deleted environment %s %v in environment: %s\n",
-					tux.Plural(envNames, "variable", "variables"),
-					strings.Join(tux.QuotedTerms(envNames), ", "),
-					strings.ToLower(cmdCfg.EnvID.EnvName),
-				)
-			}
-			if errors.Is(err, ssmstore.FaultyParamError) {
-				err = tux.WriteHeader(cmd.OutOrStdout(),
-					"[CANCELLED] Could not delete variable '%v' in environment: %s.\n"+
-						"Please make sure all listed variables exist and you have proper permission to remove them.\n",
-					strings.Split(err.Error(), ":")[0],
-					strings.ToLower(cmdCfg.EnvID.EnvName),
-				)
-			}
-			if err != nil {
-				return errors.WithStack(err)
-			}
-			return nil
+			return cmdCfg.envsec.DeleteAll(cmd.Context(), cmdCfg.envID, envNames...)
 		},
 	}
 	flags.configFlags.register(command)

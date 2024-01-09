@@ -9,7 +9,7 @@ import (
 	"go.jetpack.io/pkg/auth"
 )
 
-func (e *Envsec) authClient() (*auth.Client, error) {
+func (e *Envsec) AuthClient() (*auth.Client, error) {
 	return auth.NewClient(
 		e.Auth.Issuer,
 		e.Auth.ClientID,
@@ -22,7 +22,7 @@ func (e *Envsec) WhoAmI(
 	w io.Writer,
 	showTokens bool,
 ) error {
-	authClient, err := e.authClient()
+	authClient, err := e.AuthClient()
 	if err != nil {
 		return err
 	}

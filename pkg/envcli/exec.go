@@ -34,18 +34,18 @@ func ExecCmd() *cobra.Command {
 			commandToRun := exec.Command("/bin/sh", "-c", commandString)
 
 			envID := envsec.EnvID{
-				OrgID:     cmdCfg.EnvID.OrgID,
-				ProjectID: cmdCfg.EnvID.ProjectID,
-				EnvName:   cmdCfg.EnvID.EnvName,
+				OrgID:     cmdCfg.envID.OrgID,
+				ProjectID: cmdCfg.envID.ProjectID,
+				EnvName:   cmdCfg.envID.EnvName,
 			}
 			// Get list of stored env variables
-			envVars, err := cmdCfg.Store.List(cmd.Context(), envID)
+			envVars, err := cmdCfg.envsec.List(cmd.Context(), envID)
 			if err != nil {
 				return errors.WithStack(err)
 			}
 			// Attach stored env variables to the command environment
 			commandToRun.Env = os.Environ()
-			for _, envVar := range envVars {
+			for _, envVar := range envVars[envID] {
 				commandToRun.Env = append(commandToRun.Env, fmt.Sprintf("%s=%s", envVar.Name, envVar.Value))
 			}
 			commandToRun.Stdin = cmd.InOrStdin()

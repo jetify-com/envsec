@@ -11,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/envsec/pkg/envsec"
-	"go.jetpack.io/pkg/auth/session"
 )
 
 type SSMStore struct {
@@ -32,8 +31,9 @@ func New(ctx context.Context, config *SSMConfig) (*SSMStore, error) {
 	return store, nil
 }
 
-func (s *SSMStore) Identify(context.Context, *envsec.Envsec, *session.Token) {
-	// TODO: implement
+func (s *SSMStore) Identify(context.Context, *envsec.Envsec) error {
+	// TODO: implement if needed
+	return nil
 }
 
 func (s *SSMStore) List(ctx context.Context, envID envsec.EnvID) ([]envsec.EnvVar, error) {
