@@ -94,7 +94,7 @@ func DownloadCmd() *cobra.Command {
 
 	flags.configFlags.register(command)
 	command.Flags().StringVarP(
-		&flags.format, "format", "f", "env", "File format: env or json")
+		&flags.format, "format", "f", "env", "file format: env or json")
 
 	return command
 }

@@ -9,7 +9,7 @@ import (
 func infoCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "info",
-		Short: "show info about the current project",
+		Short: "Show info about the current project",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			workingDir, err := os.Getwd()
 			if err != nil {

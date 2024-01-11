@@ -58,14 +58,14 @@ func ListCmd() *cobra.Command {
 		"show",
 		"s",
 		false,
-		"Display the value of each environment variable (secrets included)",
+		"display the value of each environment variable (secrets included)",
 	)
 	command.Flags().StringVarP(
 		&flags.Format,
 		"format",
 		"f",
 		"table",
-		"Display the key values in key=value format. Must be one of: table | dotenv | json",
+		"format to use for displaying keys and values, one of: table, dotenv, json",
 	)
 	flags.configFlags.register(command)
 

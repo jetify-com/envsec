@@ -17,7 +17,7 @@ func initCmd() *cobra.Command {
 	flags := &initCmdFlags{}
 	command := &cobra.Command{
 		Use:   "init",
-		Short: "initialize directory and envsec project",
+		Short: "Initialize directory and envsec project",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			workingDir, err := os.Getwd()
@@ -35,7 +35,7 @@ func initCmd() *cobra.Command {
 		"force",
 		"f",
 		false,
-		"Force initialization even if already initialized",
+		"force initialization even if already initialized",
 	)
 
 	return command

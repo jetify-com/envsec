@@ -16,7 +16,7 @@ import (
 func authCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "auth",
-		Short: "envsec auth commands",
+		Short: "Authentication commands for envsec",
 	}
 
 	cmd.AddCommand(loginCmd())
@@ -29,7 +29,7 @@ func authCmd() *cobra.Command {
 func loginCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",
-		Short: "Login to envsec",
+		Short: "Log in to envsec",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := newAuthClient()
@@ -51,7 +51,7 @@ func loginCmd() *cobra.Command {
 func logoutCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "logout",
-		Short: "logout from envsec",
+		Short: "Log out from envsec",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := newAuthClient()

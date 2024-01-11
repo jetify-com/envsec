@@ -32,21 +32,21 @@ func (f *configFlags) register(cmd *cobra.Command) {
 		&f.projectID,
 		"project-id",
 		"",
-		"Project id to namespace secrets by",
+		"project id by which to namespace secrets",
 	)
 
 	cmd.PersistentFlags().StringVar(
 		&f.orgID,
 		"org-id",
 		"",
-		"Organization id to namespace secrets by",
+		"organization id by which to namespace secrets",
 	)
 
 	cmd.PersistentFlags().StringVar(
 		&f.envName,
 		"environment",
 		"dev",
-		"Environment name, such as dev or prod",
+		"environment name, one of: dev, preview, prod",
 	)
 }
 
