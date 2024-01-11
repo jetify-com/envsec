@@ -8,8 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
-	"github.com/pkg/errors"
-	"go.jetpack.io/envsec/pkg/stores/ssmstore"
 	"go.jetpack.io/pkg/auth/session"
 	"go.jetpack.io/pkg/envvar"
 	"go.jetpack.io/pkg/filecache"
@@ -38,7 +36,7 @@ func New() *AWSFed {
 	}
 }
 
-func (a *AWSFed) awsCredsWithLocalCache(
+func (a *AWSFed) AWSCredsWithLocalCache(
 	ctx context.Context,
 	tok *session.Token,
 ) (*types.Credentials, error) {
@@ -50,7 +48,7 @@ func (a *AWSFed) awsCredsWithLocalCache(
 		}
 	}
 
-	outputCreds, err := a.awsCreds(ctx, tok.IDToken)
+	outputCreds, err := a.AWSCreds(ctx, tok.IDToken)
 	if err != nil {
 		return nil, err
 	}
@@ -68,10 +66,10 @@ func (a *AWSFed) awsCredsWithLocalCache(
 	return outputCreds, nil
 }
 
-// awsCreds behaves similar to AWSCredsWithLocalCache but it takes a JWT from input
+// AWSCreds behaves similar to AWSCredsWithLocalCache but it takes a JWT from input
 // rather than reading from a file or cache. This is to allow web services use
 // this package without having to write every user's JWT in a cache or a file.
-func (a *AWSFed) awsCreds(
+func (a *AWSFed) AWSCreds(
 	ctx context.Context,
 	idToken string,
 ) (*types.Credentials, error) {
@@ -120,31 +118,4 @@ func cacheKey(t *session.Token) string {
 	}
 
 	return fmt.Sprintf("%s-%s", cacheKeyPrefix, id)
-}
-
-func GenSSMConfigFromToken(
-	ctx context.Context,
-	tok *session.Token,
-	useCache bool,
-) (*ssmstore.SSMConfig, error) {
-	if tok == nil {
-		return &ssmstore.SSMConfig{}, nil
-	}
-	fed := New()
-	var creds *types.Credentials
-	var err error
-	if useCache {
-		creds, err = fed.awsCredsWithLocalCache(ctx, tok)
-	} else {
-		creds, err = fed.awsCreds(ctx, tok.IDToken)
-	}
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return &ssmstore.SSMConfig{
-		AccessKeyID:     *creds.AccessKeyId,
-		SecretAccessKey: *creds.SecretKey,
-		SessionToken:    *creds.SessionToken,
-		Region:          fed.Region,
-	}, nil
 }

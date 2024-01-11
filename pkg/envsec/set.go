@@ -11,17 +11,17 @@ import (
 	"go.jetpack.io/envsec/internal/tux"
 )
 
-func (e *Envsec) Set(ctx context.Context, envID EnvID, name string, value string) error {
-	return e.SetMap(ctx, envID, map[string]string{name: value})
+func (e *Envsec) Set(ctx context.Context, name string, value string) error {
+	return e.SetMap(ctx, map[string]string{name: value})
 }
 
-func (e *Envsec) SetMap(ctx context.Context, envID EnvID, envMap map[string]string) error {
+func (e *Envsec) SetMap(ctx context.Context, envMap map[string]string) error {
 	err := ensureValidNames(lo.Keys(envMap))
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	err = e.store.SetAll(ctx, envID, envMap)
+	err = e.Store.SetAll(ctx, e.EnvID, envMap)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -30,16 +30,16 @@ func (e *Envsec) SetMap(ctx context.Context, envID EnvID, envMap map[string]stri
 		"[DONE] Set environment %s %v in environment: %s\n",
 		tux.Plural(insertedNames, "variable", "variables"),
 		strings.Join(tux.QuotedTerms(insertedNames), ", "),
-		strings.ToLower(envID.EnvName),
+		strings.ToLower(e.EnvID.EnvName),
 	)
 }
 
-func (e *Envsec) SetFromArgs(ctx context.Context, envID EnvID, args []string) error {
+func (e *Envsec) SetFromArgs(ctx context.Context, args []string) error {
 	envMap, err := parseSetArgs(args)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return e.SetMap(ctx, envID, envMap)
+	return e.SetMap(ctx, envMap)
 }
 
 func ValidateSetArgs(args []string) error {

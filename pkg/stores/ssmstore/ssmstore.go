@@ -6,11 +6,14 @@ package ssmstore
 import (
 	"context"
 
+	cognitoTypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/envsec/pkg/awsfed"
 	"go.jetpack.io/envsec/pkg/envsec"
+	"go.jetpack.io/pkg/auth/session"
 )
 
 type SSMStore struct {
@@ -20,20 +23,25 @@ type SSMStore struct {
 // SSMStore implements interface Store (compile-time check)
 var _ envsec.Store = (*SSMStore)(nil)
 
-func New(ctx context.Context, config *SSMConfig) (*SSMStore, error) {
-	paramStore, err := newParameterStore(ctx, config)
+func (s *SSMStore) InitForUser(ctx context.Context, e *envsec.Envsec) (*session.Token, error) {
+	client, err := e.AuthClient()
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	store := &SSMStore{
-		store: paramStore,
+	tok, err := client.LoginFlowIfNeeded(ctx)
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
-	return store, nil
-}
-
-func (s *SSMStore) Identify(context.Context, *envsec.Envsec) error {
-	// TODO: implement if needed
-	return nil
+	ssmConfig, err := genSSMConfigFromToken(ctx, tok, true /*useCache*/)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	paramStore, err := newParameterStore(ctx, ssmConfig)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	s.store = paramStore
+	return tok, nil
 }
 
 func (s *SSMStore) List(ctx context.Context, envID envsec.EnvID) ([]envsec.EnvVar, error) {
@@ -127,4 +135,31 @@ func buildTags(envID envsec.EnvID, varName string) []types.Tag {
 	}
 
 	return tags
+}
+
+func genSSMConfigFromToken(
+	ctx context.Context,
+	tok *session.Token,
+	useCache bool,
+) (*SSMConfig, error) {
+	if tok == nil {
+		return &SSMConfig{}, nil
+	}
+	fed := awsfed.New()
+	var creds *cognitoTypes.Credentials
+	var err error
+	if useCache {
+		creds, err = fed.AWSCredsWithLocalCache(ctx, tok)
+	} else {
+		creds, err = fed.AWSCreds(ctx, tok.IDToken)
+	}
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return &SSMConfig{
+		AccessKeyID:     *creds.AccessKeyId,
+		SecretAccessKey: *creds.SecretKey,
+		SessionToken:    *creds.SessionToken,
+		Region:          fed.Region,
+	}, nil
 }

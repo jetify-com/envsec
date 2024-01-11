@@ -12,36 +12,11 @@ import (
 	"go.jetpack.io/envsec/internal/tux"
 )
 
-type results map[EnvID][]EnvVar
-
-func (e *Envsec) List(
-	ctx context.Context,
-	envIDs ...EnvID,
-) (results, error) {
-	var err error
-	results := map[EnvID][]EnvVar{}
-	for _, envID := range envIDs {
-		// TODO: parallelize
-		results[envID], err = e.store.List(ctx, envID)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-	}
-
-	return results, nil
+func (e *Envsec) List(ctx context.Context) ([]EnvVar, error) {
+	return e.Store.List(ctx, e.EnvID)
 }
 
-func PrintEnvVars(vars results, w io.Writer, expose bool, format string) error {
-	for envID, envVars := range vars {
-		err := printEnvVar(w, envID, envVars, expose, format)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-	}
-	return nil
-}
-
-func printEnvVar(
+func PrintEnvVar(
 	w io.Writer,
 	envID EnvID,
 	envVars []EnvVar, // list of (name, value) pairs

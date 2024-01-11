@@ -4,16 +4,9 @@
 package envcli
 
 import (
-	"encoding/json"
-	"os"
-	"path/filepath"
-
-	"github.com/joho/godotenv"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"go.jetpack.io/envsec/pkg/envsec"
 )
-
-var errUnsupportedFormat = errors.New("unsupported format")
 
 type uploadCmdFlags struct {
 	configFlags
@@ -29,78 +22,21 @@ func UploadCmd() *cobra.Command {
 			"should have one NAME=VALUE per line.",
 		Args: cobra.MinimumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if flags.format == "json" || flags.format == "env" {
-				return nil
-			}
-			return errors.Wrapf(errUnsupportedFormat, "format: %s", flags.format)
+			return envsec.ValidateFormat(flags.format)
 		},
-		RunE: func(cmd *cobra.Command, relativeFilePaths []string) error {
-			wd, err := os.Getwd()
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			filePaths := []string{}
-			for _, relFilePath := range relativeFilePaths {
-				// get an absolute path from the relative path
-				absPath := filepath.Join(wd, relFilePath)
-
-				exists, err := fileExists(absPath)
-				if err != nil {
-					return errors.WithStack(err)
-				}
-				if !exists {
-					return errors.Errorf("could not find file at path: %s", relFilePath)
-				}
-				filePaths = append(filePaths, absPath)
-			}
-
-			var envMap map[string]string
-			if flags.format == "json" {
-				envMap, err = loadFromJSON(filePaths)
-				if err != nil {
-					return errors.Wrap(
-						err,
-						"failed to load from JSON. Ensure the file is a flat key-value "+
-							"JSON formatted file",
-					)
-				}
-			} else {
-				envMap, err = godotenv.Read(filePaths...)
-				if err != nil {
-					return errors.WithStack(err)
-				}
-			}
-
+		RunE: func(cmd *cobra.Command, paths []string) error {
 			cmdCfg, err := flags.genConfig(cmd)
 			if err != nil {
 				return err
 			}
 
-			return cmdCfg.envsec.SetMap(cmd.Context(), cmdCfg.envID, envMap)
+			return cmdCfg.envsec.Upload(cmd.Context(), paths, flags.format)
 		},
 	}
 
 	command.Flags().StringVarP(
-		&flags.format, "format", "f", "env", "File format: env or json")
+		&flags.format, "format", "f", "", "File format: dotenv or json")
 	flags.configFlags.register(command)
 
 	return command
-}
-
-func loadFromJSON(filePaths []string) (map[string]string, error) {
-	envMap := map[string]string{}
-	for _, filePath := range filePaths {
-		content, err := os.ReadFile(filePath)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		if err = json.Unmarshal(content, &envMap); err != nil {
-			return nil, errors.WithStack(err)
-		}
-		for k, v := range envMap {
-			envMap[k] = v
-		}
-	}
-	return envMap, nil
 }

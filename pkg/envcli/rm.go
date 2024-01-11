@@ -24,7 +24,7 @@ func RemoveCmd() *cobra.Command {
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			return cmdCfg.envsec.DeleteAll(cmd.Context(), cmdCfg.envID, envNames...)
+			return cmdCfg.envsec.DeleteAll(cmd.Context(), envNames...)
 		},
 	}
 	flags.configFlags.register(command)

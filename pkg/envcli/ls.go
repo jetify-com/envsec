@@ -31,25 +31,13 @@ func ListCmd() *cobra.Command {
 				return err
 			}
 
-			envIDs := []envsec.EnvID{}
-			for _, envName := range cmdCfg.envNames {
-				envIDs = append(envIDs, envsec.EnvID{
-					OrgID:     cmdCfg.envID.OrgID,
-					ProjectID: cmdCfg.envID.ProjectID,
-					EnvName:   envName,
-				})
-			}
-
-			vars, err := cmdCfg.envsec.List(
-				cmd.Context(),
-				envIDs...,
-			)
+			secrets, err := cmdCfg.envsec.List(cmd.Context())
 			if err != nil {
 				return err
 			}
 
-			return envsec.PrintEnvVars(
-				vars, cmd.OutOrStdout(), flags.ShowValues, flags.Format)
+			return envsec.PrintEnvVar(
+				cmd.OutOrStdout(), cmdCfg.envsec.EnvID, secrets, flags.ShowValues, flags.Format)
 		},
 	}
 

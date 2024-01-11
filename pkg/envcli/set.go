@@ -30,7 +30,7 @@ func SetCmd() *cobra.Command {
 				return errors.WithStack(err)
 			}
 
-			return cmdCfg.envsec.SetFromArgs(ctx, cmdCfg.envID, args)
+			return cmdCfg.envsec.SetFromArgs(ctx, args)
 		},
 	}
 	flags.configFlags.register(command)

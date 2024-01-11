@@ -10,11 +10,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/envsec/internal/build"
-	"go.jetpack.io/envsec/pkg/awsfed"
 	"go.jetpack.io/envsec/pkg/envsec"
 	"go.jetpack.io/envsec/pkg/stores/jetstore"
 	"go.jetpack.io/envsec/pkg/stores/ssmstore"
-	"go.jetpack.io/pkg/auth/session"
 	"go.jetpack.io/pkg/envvar"
 	"go.jetpack.io/pkg/id"
 	"go.jetpack.io/typeid"
@@ -83,7 +81,6 @@ func (f *configFlags) validateProjectID(orgID id.OrgID) (string, error) {
 
 type CmdConfig struct {
 	envsec   *envsec.Envsec
-	envID    envsec.EnvID
 	envNames []string
 }
 
@@ -92,35 +89,20 @@ func (f *configFlags) genConfig(cmd *cobra.Command) (*CmdConfig, error) {
 		return bootstrappedConfig, nil
 	}
 
-	ctx := cmd.Context()
-	var tok *session.Token
-	var err error
-
 	wd, err := os.Getwd()
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	envsecInstance := defaultEnvsec(cmd, wd)
 
-	var store envsec.Store
 	if envvar.Bool("ENVSEC_USE_AWS_STORE") {
-		// Temporary hack to enable the AWS store
-		ssmConfig, err := awsfed.GenSSMConfigFromToken(ctx, tok, true /*useCache*/)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		store, err = ssmstore.New(ctx, ssmConfig)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
+		// Legacy, temporary hack to enable the AWS store
+		envsecInstance.Store = &ssmstore.SSMStore{}
 	} else {
-		store = &jetstore.JetpackAPIStore{}
+		envsecInstance.Store = &jetstore.JetpackAPIStore{}
 	}
 
-	if err = envsecInstance.SetStore(ctx, store); err != nil {
-		return nil, errors.WithStack(err)
-	}
-
+	tok, err := envsecInstance.InitForUser(cmd.Context())
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -144,6 +126,8 @@ func (f *configFlags) genConfig(cmd *cobra.Command) (*CmdConfig, error) {
 		return nil, errors.WithStack(err)
 	}
 
+	envsecInstance.EnvID = envid
+
 	envNames := []string{"dev", "prod", "preview"}
 	if cmd.Flags().Changed(environmentFlagName) {
 		envNames = []string{envid.EnvName}
@@ -151,7 +135,6 @@ func (f *configFlags) genConfig(cmd *cobra.Command) (*CmdConfig, error) {
 
 	return &CmdConfig{
 		envsec:   envsecInstance,
-		envID:    envid,
 		envNames: envNames,
 	}, nil
 }

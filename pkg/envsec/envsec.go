@@ -3,16 +3,18 @@ package envsec
 import (
 	"context"
 	"io"
+
+	"go.jetpack.io/pkg/auth/session"
 )
 
 type Envsec struct {
 	APIHost    string
 	Auth       AuthConfig
+	EnvID      EnvID
 	IsDev      bool
 	Stderr     io.Writer
+	Store      Store
 	WorkingDir string
-
-	store Store
 }
 
 type AuthConfig struct {
@@ -21,10 +23,6 @@ type AuthConfig struct {
 	// TODO Audiences and Scopes
 }
 
-func (e *Envsec) SetStore(ctx context.Context, store Store) error {
-	if err := store.Identify(ctx, e); err != nil {
-		return err
-	}
-	e.store = store
-	return nil
+func (e *Envsec) InitForUser(ctx context.Context) (*session.Token, error) {
+	return e.Store.InitForUser(ctx, e)
 }

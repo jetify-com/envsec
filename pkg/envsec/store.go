@@ -3,6 +3,8 @@ package envsec
 import (
 	"context"
 	"errors"
+
+	"go.jetpack.io/pkg/auth/session"
 )
 
 // Uniquely identifies an environment in which we store environment variables.
@@ -42,8 +44,8 @@ type Store interface {
 	Delete(ctx context.Context, envID EnvID, name string) error
 	// Delete multiple environment variables.
 	DeleteAll(ctx context.Context, envID EnvID, names []string) error
-	// Identify the user for store requests.
-	Identify(ctx context.Context, e *Envsec) error
+	// InitForUser initializes the store for current user.
+	InitForUser(ctx context.Context, e *Envsec) (*session.Token, error)
 }
 
 type EnvVar struct {

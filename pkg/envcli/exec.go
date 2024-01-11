@@ -11,7 +11,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/envsec/pkg/envsec"
 )
 
 type execCmdFlags struct {
@@ -33,19 +32,14 @@ func ExecCmd() *cobra.Command {
 			commandString := strings.Join(args, " ")
 			commandToRun := exec.Command("/bin/sh", "-c", commandString)
 
-			envID := envsec.EnvID{
-				OrgID:     cmdCfg.envID.OrgID,
-				ProjectID: cmdCfg.envID.ProjectID,
-				EnvName:   cmdCfg.envID.EnvName,
-			}
 			// Get list of stored env variables
-			envVars, err := cmdCfg.envsec.List(cmd.Context(), envID)
+			envVars, err := cmdCfg.envsec.List(cmd.Context())
 			if err != nil {
 				return errors.WithStack(err)
 			}
 			// Attach stored env variables to the command environment
 			commandToRun.Env = os.Environ()
-			for _, envVar := range envVars[envID] {
+			for _, envVar := range envVars {
 				commandToRun.Env = append(commandToRun.Env, fmt.Sprintf("%s=%s", envVar.Name, envVar.Value))
 			}
 			commandToRun.Stdin = cmd.InOrStdin()
