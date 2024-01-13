@@ -28,7 +28,10 @@ jobs:
             ~/.cache/golangci-lint
             ~/.cache/go-build
             ~/go/pkg
-          key: ${{ runner.os }}-${{ hashFiles('**/*.sum') }}
+          key: ${{ runner.os }}-tests-${{ hashFiles('**/*.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-tests
+            ${{ runner.os }}
 
       - name: Build
         run: devbox run build
