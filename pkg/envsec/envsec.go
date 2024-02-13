@@ -18,8 +18,9 @@ type Envsec struct {
 }
 
 type AuthConfig struct {
-	Issuer   string
-	ClientID string
+	Issuer          string
+	ClientID        string
+	SuccessRedirect string
 	// TODO Audiences and Scopes
 }
 

@@ -52,3 +52,10 @@ func BuildEnv() string {
 	}
 	return "prod"
 }
+
+func SuccessRedirect() string {
+	if IsDev {
+		return "https://auth.jetpack.dev/account/login/success"
+	}
+	return "https://auth.jetpack.io/account/login/success"
+}

@@ -14,6 +14,7 @@ func (e *Envsec) AuthClient() (*auth.Client, error) {
 		e.Auth.Issuer,
 		e.Auth.ClientID,
 		[]string{"openid", "offline_access", "email", "profile"},
+		e.Auth.SuccessRedirect,
 	)
 }
 

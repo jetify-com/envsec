@@ -45,8 +45,9 @@ func defaultEnvsec(cmd *cobra.Command, wd string) *envsec.Envsec {
 	return &envsec.Envsec{
 		APIHost: build.JetpackAPIHost(),
 		Auth: envsec.AuthConfig{
-			ClientID: envvar.Get("ENVSEC_CLIENT_ID", build.ClientID()),
-			Issuer:   envvar.Get("ENVSEC_ISSUER", build.Issuer()),
+			ClientID:        envvar.Get("ENVSEC_CLIENT_ID", build.ClientID()),
+			Issuer:          envvar.Get("ENVSEC_ISSUER", build.Issuer()),
+			SuccessRedirect: envvar.Get("ENVSEC_SUCCESS_REDIRECT", build.SuccessRedirect()),
 		},
 		IsDev:      build.IsDev,
 		Stderr:     cmd.ErrOrStderr(),
