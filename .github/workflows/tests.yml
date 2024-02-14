@@ -14,15 +14,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Monorepo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install devbox
-        uses: jetpack-io/devbox-install-action@v0.7.0
+        uses: jetpack-io/devbox-install-action@v0.8.0
         with:
           enable-cache: true
 
       - name: Mount golang cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/golangci-lint
