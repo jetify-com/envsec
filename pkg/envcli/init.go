@@ -41,16 +41,17 @@ func initCmd() *cobra.Command {
 	return command
 }
 
-func defaultEnvsec(cmd *cobra.Command, wd string) *envsec.Envsec {
+func defaultEnvsec(cmd *cobra.Command, workingDir string) *envsec.Envsec {
 	return &envsec.Envsec{
 		APIHost: build.JetpackAPIHost(),
 		Auth: envsec.AuthConfig{
+			Audience:        []string{envvar.Get("ENVSEC_AUDIENCE", build.Audience())},
 			ClientID:        envvar.Get("ENVSEC_CLIENT_ID", build.ClientID()),
 			Issuer:          envvar.Get("ENVSEC_ISSUER", build.Issuer()),
 			SuccessRedirect: envvar.Get("ENVSEC_SUCCESS_REDIRECT", build.SuccessRedirect()),
 		},
 		IsDev:      build.IsDev,
 		Stderr:     cmd.ErrOrStderr(),
-		WorkingDir: wd,
+		WorkingDir: workingDir,
 	}
 }

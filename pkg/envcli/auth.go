@@ -111,5 +111,6 @@ func newAuthClient() (*auth.Client, error) {
 		clientID,
 		[]string{"openid", "offline_access", "email", "profile"},
 		envvar.Get("ENVSEC_SUCCESS_REDIRECT", build.SuccessRedirect()),
+		[]string{envvar.Get("ENVSEC_AUDIENCE", build.Audience())},
 	)
 }

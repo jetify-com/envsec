@@ -18,6 +18,7 @@ type Envsec struct {
 }
 
 type AuthConfig struct {
+	Audience        []string
 	Issuer          string
 	ClientID        string
 	SuccessRedirect string

@@ -32,6 +32,10 @@ func Issuer() string {
 	return "https://accounts.jetpack.io"
 }
 
+func Audience() string {
+	return "https://api.jetpack.io"
+}
+
 func ClientID() string {
 	if IsDev {
 		return "3945b320-bd31-4313-af27-846b67921acb"
