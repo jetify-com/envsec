@@ -3,8 +3,8 @@ package awsfed
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
@@ -40,30 +40,17 @@ func (a *AWSFed) AWSCredsWithLocalCache(
 	ctx context.Context,
 	tok *session.Token,
 ) (*types.Credentials, error) {
-	cache := filecache.New("jetpack.io/envsec")
-	if cachedCreds, err := cache.Get(cacheKey(tok)); err == nil {
-		var creds types.Credentials
-		if err := json.Unmarshal(cachedCreds, &creds); err == nil {
-			return &creds, nil
-		}
-	}
-
-	outputCreds, err := a.AWSCreds(ctx, tok.IDToken)
-	if err != nil {
-		return nil, err
-	}
-
-	if creds, err := json.Marshal(outputCreds); err != nil {
-		return nil, err
-	} else if err := cache.SetT(
+	cache := filecache.New[*types.Credentials]("jetpack.io/envsec")
+	return cache.GetOrSetWithTime(
 		cacheKey(tok),
-		creds,
-		*outputCreds.Expiration,
-	); err != nil {
-		return nil, err
-	}
-
-	return outputCreds, nil
+		func() (*types.Credentials, time.Time, error) {
+			outputCreds, err := a.AWSCreds(ctx, tok.IDToken)
+			if err != nil {
+				return nil, time.Time{}, err
+			}
+			return outputCreds, *outputCreds.Expiration, nil
+		},
+	)
 }
 
 // AWSCreds behaves similar to AWSCredsWithLocalCache but it takes a JWT from input
