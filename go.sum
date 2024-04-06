@@ -143,8 +143,8 @@ github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
-go.jetpack.io/pkg v0.0.0-20240404001923-7b42192bf9a5 h1:uFFlceGNlxqrKA/1umrBvNLTTBNkBU306Uqq1O27agM=
-go.jetpack.io/pkg v0.0.0-20240404001923-7b42192bf9a5/go.mod h1:gtmpVShXMEcZPBFZHswB3oCPYXobeR41b9CMybAjQYw=
+go.jetpack.io/pkg v0.0.0-20240405214046-034a6476e201 h1:59icpq6Y6uqnyG+IVijjGvLnL4U3syjFkq2ILnsC30Q=
+go.jetpack.io/pkg v0.0.0-20240405214046-034a6476e201/go.mod h1:gtmpVShXMEcZPBFZHswB3oCPYXobeR41b9CMybAjQYw=
 go.jetpack.io/typeid v1.0.0 h1:8gQ+iYGdyiQ0Pr40ydSB/PzMOIwlXX5DTojp1CBeSPQ=
 go.jetpack.io/typeid v1.0.0/go.mod h1:+UPEaECUgFxgAjFPn5Yf9eO/3ft/3xZ98Eahv9JW/GQ=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
