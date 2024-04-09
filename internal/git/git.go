@@ -34,7 +34,7 @@ func GitSubdirectory(wd string) (string, error) {
 }
 
 // github
-// git format git@github.com:jetpack-io/opensource.git
+// git format git@github.com:jetify-com/opensource.git
 // https format https://github.com/jetify-com/opensource.git
 
 // bitbucket
