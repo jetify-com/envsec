@@ -29,7 +29,7 @@ func Issuer() string {
 	if IsDev {
 		return "https://laughing-agnesi-vzh2rap9f6.projects.oryapis.com"
 	}
-	return "https://accounts.jetpack.io"
+	return "https://accounts.jetify.com"
 }
 
 func Audience() string {
@@ -61,5 +61,5 @@ func SuccessRedirect() string {
 	if IsDev {
 		return "https://auth.jetpack.dev/account/login/success"
 	}
-	return "https://auth.jetpack.io/account/login/success"
+	return "https://auth.jetify.com/account/login/success"
 }

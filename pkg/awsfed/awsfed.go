@@ -30,7 +30,7 @@ func New() *AWSFed {
 		LegacyProvider: "auth.jetpack.io",
 		Provider: envvar.Get(
 			"ENVSEC_AUTH_DOMAIN",
-			"accounts.jetpack.io",
+			"accounts.jetify.com",
 		),
 		Region: "us-west-2",
 	}
