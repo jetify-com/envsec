@@ -21,7 +21,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/samber/lo v1.38.1
 	github.com/spf13/cobra v1.8.0
-	go.jetpack.io/pkg v0.0.0-20240405214046-034a6476e201
+	go.jetpack.io/pkg v0.0.0-20240409190227-52f71fcd6c8a
 	go.jetpack.io/typeid v1.0.0
 	golang.org/x/text v0.14.0
 )
@@ -40,7 +40,7 @@ require (
 	github.com/coreos/go-oidc/v3 v3.7.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
-	github.com/gofrs/uuid/v5 v5.0.1 // indirect
+	github.com/gofrs/uuid/v5 v5.1.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/renameio/v2 v2.0.0 // indirect
 	github.com/gosimple/slug v1.13.1 // indirect
