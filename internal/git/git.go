@@ -35,7 +35,7 @@ func GitSubdirectory(wd string) (string, error) {
 
 // github
 // git format git@github.com:jetpack-io/opensource.git
-// https format https://github.com/jetpack-io/opensource.git
+// https format https://github.com/jetify-com/opensource.git
 
 // bitbucket
 
@@ -44,7 +44,7 @@ func GitSubdirectory(wd string) (string, error) {
 
 // gh format is same as git
 //
-// normalized: github.com/jetpack-io/opensource
+// normalized: github.com/jetify-com/opensource
 func normalizeGitRepoURL(repoURL string) string {
 	result := strings.TrimSpace(repoURL)
 	if strings.HasPrefix(result, "git@") {
