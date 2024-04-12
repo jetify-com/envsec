@@ -1,6 +1,6 @@
 ## envsec exec
 
-Execute a command with Jetpack-stored environment variables
+Execute a command with Jetify-stored environment variables
 
 ### Synopsis
 

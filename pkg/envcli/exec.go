@@ -21,7 +21,7 @@ func ExecCmd() *cobra.Command {
 	flags := &execCmdFlags{}
 	command := &cobra.Command{
 		Use:   "exec <command>",
-		Short: "Execute a command with Jetpack-stored environment variables",
+		Short: "Execute a command with Jetify-stored environment variables",
 		Long:  "Execute a specified command with remote environment variables being present for the duration of the command. If an environment variable exists both locally and in remote storage, the remotely stored one is prioritized.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
