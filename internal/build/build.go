@@ -33,7 +33,7 @@ func Issuer() string {
 }
 
 func Audience() string {
-	return "https://api.jetpack.io"
+	return "https://api.jetify.com"
 }
 
 func ClientID() string {

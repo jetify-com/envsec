@@ -105,7 +105,7 @@ func newAuthClient() (*auth.Client, error) {
 	clientID := envvar.Get("ENVSEC_CLIENT_ID", build.ClientID())
 	// TODO: Consider making scopes and audience configurable:
 	// "ENVSEC_AUTH_SCOPE" = "openid offline_access email profile"
-	// "ENVSEC_AUTH_AUDIENCE" = "https://api.jetpack.io",
+	// "ENVSEC_AUTH_AUDIENCE" = "https://api.jetify.com",
 	return auth.NewClient(
 		issuer,
 		clientID,
