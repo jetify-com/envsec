@@ -9,13 +9,13 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"go.jetify.com/typeid"
 	"go.jetpack.io/envsec/internal/build"
 	"go.jetpack.io/envsec/pkg/envsec"
 	"go.jetpack.io/envsec/pkg/stores/jetstore"
 	"go.jetpack.io/envsec/pkg/stores/ssmstore"
 	"go.jetpack.io/pkg/envvar"
 	"go.jetpack.io/pkg/id"
-	"go.jetpack.io/typeid"
 )
 
 // to be composed into xyzCmdFlags structs

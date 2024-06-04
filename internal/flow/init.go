@@ -11,13 +11,13 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
+	"go.jetify.com/typeid"
 	"go.jetpack.io/envsec/internal/git"
 	"go.jetpack.io/pkg/api"
 	membersv1alpha1 "go.jetpack.io/pkg/api/gen/priv/members/v1alpha1"
 	projectsv1alpha1 "go.jetpack.io/pkg/api/gen/priv/projects/v1alpha1"
 	"go.jetpack.io/pkg/auth/session"
 	"go.jetpack.io/pkg/id"
-	"go.jetpack.io/typeid"
 )
 
 // flow:
