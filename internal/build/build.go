@@ -59,7 +59,7 @@ func BuildEnv() string {
 
 func SuccessRedirect() string {
 	if IsDev {
-		return "https://auth.jetpack.dev/account/login/success"
+		return "https://auth.dev-jetify.com/account/login/success"
 	}
 	return "https://auth.jetify.com/account/login/success"
 }
