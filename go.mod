@@ -22,7 +22,7 @@ require (
 	github.com/samber/lo v1.39.0
 	github.com/spf13/cobra v1.8.0
 	go.jetify.com/typeid v1.3.1-0.20240906154819-1fff36d79f37
-	go.jetpack.io/pkg v0.0.0-20241011221013-fb2024bf85c3
+	go.jetpack.io/pkg v0.0.0-20241025162924-f10fa2908e6a
 	golang.org/x/text v0.14.0
 )
 
