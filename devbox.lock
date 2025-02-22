@@ -1,6 +1,9 @@
 {
   "lockfile_version": "1",
   "packages": {
+    "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62": {
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+    },
     "go@latest": {
       "last_modified": "2024-03-22T11:26:23Z",
       "resolved": "github:NixOS/nixpkgs/a3ed7406349a9335cb4c2a71369b697cecd9d351#go",
