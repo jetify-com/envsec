@@ -1,6 +1,8 @@
 module go.jetpack.io/envsec
 
-go 1.21
+go 1.23
+
+toolchain go1.24.0
 
 require (
 	connectrpc.com/connect v1.16.0
@@ -22,7 +24,7 @@ require (
 	github.com/samber/lo v1.39.0
 	github.com/spf13/cobra v1.8.0
 	go.jetify.com/typeid v1.3.1-0.20241211224430-39758d55f188
-	go.jetpack.io/pkg v0.0.0-20241211224430-03854a8cb509
+	go.jetpack.io/pkg v0.0.0-20250222021558-d8c54e43d747
 	golang.org/x/text v0.14.0
 )
 
@@ -42,7 +44,7 @@ require (
 	github.com/creack/pty v1.1.21 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.1 // indirect
-	github.com/gofrs/uuid/v5 v5.3.0 // indirect
+	github.com/gofrs/uuid/v5 v5.3.1 // indirect
 	github.com/google/renameio/v2 v2.0.0 // indirect
 	github.com/gosimple/slug v1.14.0 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
