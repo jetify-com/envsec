@@ -1,4 +1,4 @@
-module go.jetpack.io/envsec
+module go.jetify.com/envsec
 
 go 1.23
 
@@ -24,7 +24,7 @@ require (
 	github.com/samber/lo v1.39.0
 	github.com/spf13/cobra v1.8.0
 	go.jetify.com/typeid v1.3.1-0.20241211224430-39758d55f188
-	go.jetpack.io/pkg v0.0.0-20250222021558-d8c54e43d747
+	go.jetify.com/pkg v0.0.0-20250222021558-d8c54e43d747
 	golang.org/x/text v0.14.0
 )
 

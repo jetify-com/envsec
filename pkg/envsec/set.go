@@ -8,7 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/envsec/internal/tux"
+	"go.jetify.com/envsec/internal/tux"
 )
 
 func (e *Envsec) Set(ctx context.Context, name string, value string) error {

@@ -7,7 +7,7 @@ import (
 	"context"
 	"os"
 
-	"go.jetpack.io/envsec/pkg/envcli"
+	"go.jetify.com/envsec/pkg/envcli"
 )
 
 func main() {

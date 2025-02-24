@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"go.jetpack.io/envsec/internal/tux"
+	"go.jetify.com/envsec/internal/tux"
 )
 
 func (e *Envsec) DeleteAll(ctx context.Context, envNames ...string) error {

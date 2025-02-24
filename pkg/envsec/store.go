@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"go.jetpack.io/pkg/auth/session"
+	"go.jetify.com/pkg/auth/session"
 )
 
 // Uniquely identifies an environment in which we store environment variables.

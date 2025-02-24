@@ -8,7 +8,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
-	"go.jetpack.io/pkg/fileutil"
+	"go.jetify.com/pkg/fileutil"
 )
 
 // Upload uploads the environment variables for the environment specified from

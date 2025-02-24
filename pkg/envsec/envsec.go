@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"go.jetpack.io/pkg/auth/session"
+	"go.jetify.com/pkg/auth/session"
 )
 
 type Envsec struct {

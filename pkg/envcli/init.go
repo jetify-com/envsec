@@ -4,9 +4,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"go.jetpack.io/envsec/internal/build"
-	"go.jetpack.io/envsec/pkg/envsec"
-	"go.jetpack.io/pkg/envvar"
+	"go.jetify.com/envsec/internal/build"
+	"go.jetify.com/envsec/pkg/envsec"
+	"go.jetify.com/pkg/envvar"
 )
 
 type initCmdFlags struct {

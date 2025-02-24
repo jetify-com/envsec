@@ -10,7 +10,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
-	"go.jetpack.io/envsec/internal/tux"
+	"go.jetify.com/envsec/internal/tux"
 )
 
 // Download downloads the environment variables for the environment specified.

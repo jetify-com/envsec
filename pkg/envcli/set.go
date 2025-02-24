@@ -6,7 +6,7 @@ package envcli
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/envsec/pkg/envsec"
+	"go.jetify.com/envsec/pkg/envsec"
 )
 
 type setCmdFlags struct {

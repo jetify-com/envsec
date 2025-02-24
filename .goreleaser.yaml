@@ -12,9 +12,9 @@ builds:
     mod_timestamp: "{{ .CommitTimestamp }}" # For reproducible builds
     ldflags:
       - -s -w # Strip debug 
-      - -X go.jetpack.io/envsec/internal/build.Version={{.Version}}
-      - -X go.jetpack.io/envsec/internal/build.Commit={{.Commit}}
-      - -X go.jetpack.io/envsec/internal/build.CommitDate={{.CommitDate}}
+      - -X go.jetify.com/envsec/internal/build.Version={{.Version}}
+      - -X go.jetify.com/envsec/internal/build.Commit={{.Commit}}
+      - -X go.jetify.com/envsec/internal/build.CommitDate={{.CommitDate}}
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on

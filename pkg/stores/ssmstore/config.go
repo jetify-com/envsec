@@ -3,7 +3,7 @@ package ssmstore
 import (
 	"path"
 
-	"go.jetpack.io/envsec/pkg/envsec"
+	"go.jetify.com/envsec/pkg/envsec"
 )
 
 const pathPrefix = "/jetpack-data/env"

@@ -8,9 +8,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"go.jetpack.io/envsec/internal/build"
-	"go.jetpack.io/pkg/auth"
-	"go.jetpack.io/pkg/envvar"
+	"go.jetify.com/envsec/internal/build"
+	"go.jetify.com/pkg/auth"
+	"go.jetify.com/pkg/envvar"
 )
 
 func authCmd() *cobra.Command {

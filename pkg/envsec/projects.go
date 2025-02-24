@@ -5,9 +5,9 @@ import (
 	"io"
 
 	"connectrpc.com/connect"
-	"go.jetpack.io/envsec/internal/tux"
-	"go.jetpack.io/pkg/api"
-	v1alpha1 "go.jetpack.io/pkg/api/gen/priv/projects/v1alpha1"
+	"go.jetify.com/envsec/internal/tux"
+	"go.jetify.com/pkg/api"
+	v1alpha1 "go.jetify.com/pkg/api/gen/priv/projects/v1alpha1"
 )
 
 func (e *Envsec) DescribeCurrentProject(

@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
-	"go.jetpack.io/envsec/pkg/envsec"
-	"go.jetpack.io/pkg/api"
-	secretsv1alpha1 "go.jetpack.io/pkg/api/gen/priv/secrets/v1alpha1"
-	"go.jetpack.io/pkg/api/gen/priv/secrets/v1alpha1/secretsv1alpha1connect"
-	"go.jetpack.io/pkg/auth/session"
+	"go.jetify.com/envsec/pkg/envsec"
+	"go.jetify.com/pkg/api"
+	secretsv1alpha1 "go.jetify.com/pkg/api/gen/priv/secrets/v1alpha1"
+	"go.jetify.com/pkg/api/gen/priv/secrets/v1alpha1/secretsv1alpha1connect"
+	"go.jetify.com/pkg/auth/session"
 )
 
 type JetpackAPIStore struct {

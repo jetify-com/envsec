@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/envsec/pkg/awsfed"
-	"go.jetpack.io/envsec/pkg/envsec"
-	"go.jetpack.io/pkg/auth/session"
+	"go.jetify.com/envsec/pkg/awsfed"
+	"go.jetify.com/envsec/pkg/envsec"
+	"go.jetify.com/pkg/auth/session"
 )
 
 type SSMStore struct {

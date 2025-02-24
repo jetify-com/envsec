@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 
 	"go.jetify.com/typeid"
-	"go.jetpack.io/envsec/internal/flow"
-	"go.jetpack.io/envsec/internal/git"
-	"go.jetpack.io/pkg/api"
-	"go.jetpack.io/pkg/id"
+	"go.jetify.com/envsec/internal/flow"
+	"go.jetify.com/envsec/internal/git"
+	"go.jetify.com/pkg/api"
+	"go.jetify.com/pkg/id"
 )
 
 var (

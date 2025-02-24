@@ -5,7 +5,7 @@ package envcli
 
 import (
 	"github.com/spf13/cobra"
-	"go.jetpack.io/envsec/pkg/envsec"
+	"go.jetify.com/envsec/pkg/envsec"
 )
 
 const environmentFlagName = "environment"

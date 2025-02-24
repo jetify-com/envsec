@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 
-	"go.jetpack.io/pkg/api"
-	"go.jetpack.io/pkg/auth"
+	"go.jetify.com/pkg/api"
+	"go.jetify.com/pkg/auth"
 )
 
 func (e *Envsec) AuthClient() (*auth.Client, error) {

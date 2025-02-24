@@ -9,7 +9,7 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
-	"go.jetpack.io/envsec/internal/tux"
+	"go.jetify.com/envsec/internal/tux"
 )
 
 func (e *Envsec) List(ctx context.Context) ([]EnvVar, error) {

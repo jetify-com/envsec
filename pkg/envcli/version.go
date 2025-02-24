@@ -8,7 +8,7 @@ import (
 	"runtime"
 
 	"github.com/spf13/cobra"
-	"go.jetpack.io/envsec/internal/build"
+	"go.jetify.com/envsec/internal/build"
 )
 
 type versionFlags struct {

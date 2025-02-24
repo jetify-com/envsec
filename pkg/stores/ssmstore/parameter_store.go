@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/envsec/pkg/envsec"
+	"go.jetify.com/envsec/pkg/envsec"
 	"golang.org/x/text/collate"
 	"golang.org/x/text/language"
 )
