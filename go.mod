@@ -1,8 +1,6 @@
 module go.jetify.com/envsec
 
-go 1.23
-
-toolchain go1.24.0
+go 1.24.0
 
 require (
 	connectrpc.com/connect v1.16.0
