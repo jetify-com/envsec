@@ -7,11 +7,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"go.jetify.com/typeid"
 	"go.jetify.com/envsec/internal/flow"
 	"go.jetify.com/envsec/internal/git"
 	"go.jetify.com/pkg/api"
 	"go.jetify.com/pkg/id"
+	"go.jetify.com/typeid"
 )
 
 var (
