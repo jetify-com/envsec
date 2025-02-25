@@ -21,8 +21,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/samber/lo v1.49.1
 	github.com/spf13/cobra v1.9.1
-	go.jetify.com/pkg v0.0.0-20250224183918-17254e665f50
-	go.jetify.com/typeid v1.3.0
+	go.jetify.com/pkg v0.0.0-20250224233529-2eb0cb973386
+	go.jetify.com/typeid v1.3.1-0.20250224183918-3272d9fe6d56
 	golang.org/x/text v0.22.0
 )
 
