@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.36.3
 	github.com/aws/aws-sdk-go-v2/config v1.29.9
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.62
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.29.1
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.57.2
 	github.com/aws/smithy-go v1.22.3
 	github.com/charmbracelet/lipgloss v1.0.0
