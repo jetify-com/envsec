@@ -136,8 +136,8 @@ github.com/stretchr/testify v1.10.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf
 github.com/tailscale/hujson v0.0.0-20250226034555-ec1d1c113d33 h1:idh63uw+gsG05HwjZsAENCG4KZfyvjK03bpjxa5qRRk=
 github.com/tailscale/hujson v0.0.0-20250226034555-ec1d1c113d33/go.mod h1:EbW0wDK/qEUYI0A5bqq0C2kF8JTQwWONmGDBbzsxxHo=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
-go.jetify.com/pkg v0.0.0-20250515201725-39581204e616 h1:Ox5i5HrYnCHYpTKE0aWV/tAM9hbm+Jsfa344aLj99c0=
-go.jetify.com/pkg v0.0.0-20250515201725-39581204e616/go.mod h1:Jblf48/VVMjxMmJttRZIKb3dW8jiLaYZGgdOYRqvllk=
+go.jetify.com/pkg v0.0.0-20250521181643-de618980d894 h1:yqTW6jitfHa9vG4HawxMk9S/xHA9GFqpS1zUkbBpfy4=
+go.jetify.com/pkg v0.0.0-20250521181643-de618980d894/go.mod h1:Jblf48/VVMjxMmJttRZIKb3dW8jiLaYZGgdOYRqvllk=
 go.jetify.com/typeid v1.3.1-0.20250402201646-5c084b871320 h1:Rs8Ay7BQ0v8YnClEge23RreCkYDO6RregLdW61/V3WY=
 go.jetify.com/typeid v1.3.1-0.20250402201646-5c084b871320/go.mod h1:x8vtxYf2h/0T0a4fS2K2vqVM0aBsGwkw03tal6PxK1s=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
