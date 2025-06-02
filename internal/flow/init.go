@@ -16,8 +16,7 @@ import (
 	membersv1alpha1 "go.jetify.com/pkg/api/gen/priv/members/v1alpha1"
 	projectsv1alpha1 "go.jetify.com/pkg/api/gen/priv/projects/v1alpha1"
 	"go.jetify.com/pkg/auth/session"
-	"go.jetify.com/pkg/id"
-	"go.jetify.com/typeid"
+	"go.jetify.com/pkg/ids"
 )
 
 // flow:
@@ -33,35 +32,35 @@ type Init struct {
 	WorkingDir            string
 }
 
-func (i *Init) Run(ctx context.Context) (id.ProjectID, error) {
+func (i *Init) Run(ctx context.Context) (ids.ProjectID, error) {
 	createProject, err := i.confirmSetupProjectPrompt()
 	if err != nil {
-		return id.ProjectID{}, err
+		return ids.ProjectID{}, err
 	}
 	if !createProject {
-		return id.ProjectID{}, errors.New("aborted")
+		return ids.ProjectID{}, errors.New("aborted")
 	}
 
 	member, err := i.Client.GetMember(ctx, i.Token.IDClaims().Subject)
 	if err != nil {
-		return id.ProjectID{}, err
+		return ids.ProjectID{}, err
 	}
 
 	// TODO: printOrgNotice will be a team picker once that is implemented.
 	i.printOrgNotice(member)
-	orgID, err := typeid.Parse[id.OrgID](i.Token.IDClaims().OrgID)
+	orgID, err := ids.ParseOrgID(i.Token.IDClaims().OrgID)
 	if err != nil {
-		return id.ProjectID{}, err
+		return ids.ProjectID{}, err
 	}
 
 	projects, err := i.Client.ListProjects(ctx, orgID)
 	if err != nil {
-		return id.ProjectID{}, err
+		return ids.ProjectID{}, err
 	}
 	if len(projects) > 0 {
 		linkToExisting, err := i.linkToExistingPrompt()
 		if err != nil {
-			return id.ProjectID{}, err
+			return ids.ProjectID{}, err
 		}
 		if linkToExisting {
 			return i.showExistingListPrompt(projects)
@@ -97,7 +96,7 @@ func (i *Init) linkToExistingPrompt() (bool, error) {
 
 func (i *Init) showExistingListPrompt(
 	projects []*projectsv1alpha1.Project,
-) (id.ProjectID, error) {
+) (ids.ProjectID, error) {
 	// Ignore errors, it's fine if not in repo or git not installed.
 	repo, _ := git.GitRepoURL(i.WorkingDir)
 	directory, _ := git.GitSubdirectory(i.WorkingDir)
@@ -117,12 +116,12 @@ func (i *Init) showExistingListPrompt(
 
 	idx := 0
 	if err := survey.AskOne(prompt, &idx); err != nil {
-		return id.ProjectID{}, err
+		return ids.ProjectID{}, err
 	}
 
-	projectID, err := typeid.Parse[id.ProjectID](projects[idx].GetId())
+	projectID, err := ids.ParseProjectID(projects[idx].GetId())
 	if err != nil {
-		return id.ProjectID{}, err
+		return ids.ProjectID{}, err
 	}
 	name := projects[idx].GetName()
 	if name == "" {
@@ -135,7 +134,7 @@ func (i *Init) showExistingListPrompt(
 func (i *Init) createNewPrompt(
 	ctx context.Context,
 	member *membersv1alpha1.Member,
-) (id.ProjectID, error) {
+) (ids.ProjectID, error) {
 	prompt := &survey.Input{
 		Message: "What’s the name of your new project?",
 		Default: filepath.Base(i.WorkingDir),
@@ -143,12 +142,12 @@ func (i *Init) createNewPrompt(
 
 	name := ""
 	if err := survey.AskOne(prompt, &name); err != nil {
-		return id.ProjectID{}, err
+		return ids.ProjectID{}, err
 	}
 
-	orgID, err := typeid.Parse[id.OrgID](i.Token.IDClaims().OrgID)
+	orgID, err := ids.ParseOrgID(i.Token.IDClaims().OrgID)
 	if err != nil {
-		return id.ProjectID{}, err
+		return ids.ProjectID{}, err
 	}
 
 	// Ignore errors, it's fine if not in repo or git not installed.
@@ -163,12 +162,12 @@ func (i *Init) createNewPrompt(
 		strings.TrimSpace(name),
 	)
 	if err != nil {
-		return id.ProjectID{}, err
+		return ids.ProjectID{}, err
 	}
 
-	projectID, err := typeid.Parse[id.ProjectID](project.GetId())
+	projectID, err := ids.ParseProjectID(project.GetId())
 	if err != nil {
-		return id.ProjectID{}, err
+		return ids.ProjectID{}, err
 	}
 
 	fmt.Fprintf(
