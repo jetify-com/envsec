@@ -62,7 +62,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/tailscale/hujson v0.0.0-20250226034555-ec1d1c113d33 // indirect
-	go.jetify.com/typeid v1.3.1-0.20250402201646-5c084b871320 // indirect
+	go.jetify.com/typeid v1.3.1-0.20250602221042-e26d10b64640 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/oauth2 v0.28.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
