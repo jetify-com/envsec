@@ -21,7 +21,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/samber/lo v1.49.1
 	github.com/spf13/cobra v1.9.1
-	go.jetify.com/pkg v0.0.0-20250708213131-583ddbf09a80
+	go.jetify.com/pkg v0.0.0-20250709180804-ea4301dbbaab
 	golang.org/x/text v0.23.0
 )
 
@@ -63,6 +63,7 @@ require (
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/tailscale/hujson v0.0.0-20250226034555-ec1d1c113d33 // indirect
 	go.jetify.com/typeid v1.3.1-0.20250708200829-05dce5112f3d // indirect
+	go.jetify.com/typeid/v2 v2.0.0-alpha.2 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/oauth2 v0.28.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
