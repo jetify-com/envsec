@@ -10,7 +10,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/MakeNowJust/heredoc"
+	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
 )
 

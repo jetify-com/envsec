@@ -55,17 +55,21 @@ func printTableFormat(w io.Writer, envID EnvID, envVars []EnvVar) error {
 		return errors.WithStack(err)
 	}
 	table := tablewriter.NewWriter(w)
-	table.SetHeader([]string{"Name", "Value"})
+	table.Header("Name", "Value")
 	tableValues := [][]string{}
 	for _, envVar := range envVars {
 		tableValues = append(tableValues, []string{envVar.Name /*name*/, envVar.Value})
 	}
-	table.AppendBulk(tableValues)
+	if err := table.Bulk(tableValues); err != nil {
+		return errors.WithStack(err)
+	}
 
 	if len(tableValues) == 0 {
 		fmt.Println("No environment variables currently defined.")
 	} else {
-		table.Render()
+		if err := table.Render(); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
 	// Add an empty line after the table is rendered.

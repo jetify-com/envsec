@@ -38,11 +38,14 @@ func (e *Envsec) DescribeCurrentProject(
 		return err
 	}
 
-	tux.FTable(w, [][]string{
+	err = tux.FTable(w, [][]string{
 		{"Project", response.Msg.GetProject().GetName()},
 		{"project ID", project.ProjectID.String()},
 		{"Org ID", project.OrgID.String()},
 	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

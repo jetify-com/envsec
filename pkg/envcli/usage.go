@@ -4,7 +4,7 @@
 package envcli
 
 import (
-	"github.com/MakeNowJust/heredoc"
+	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
 	"go.jetify.com/envsec/internal/tux"
 )
