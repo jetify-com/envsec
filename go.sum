@@ -150,8 +150,8 @@ github.com/tailscale/hujson v0.0.0-20250605163823-992244df8c5a/go.mod h1:EbW0wDK
 github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e h1:JVG44RsyaB9T2KIHavMF/ppJZNG9ZpyihvCd0w101no=
 github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e/go.mod h1:RbqR21r5mrJuqunuUZ/Dhy/avygyECGrLceyNeo4LiM=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
-go.jetify.com/pkg v0.0.0-20250709180804-ea4301dbbaab h1:tL0Jni8Yzx5OdzuOINUSVuW9q7M989Fpt2z6pGTKeYI=
-go.jetify.com/pkg v0.0.0-20250709180804-ea4301dbbaab/go.mod h1:2r1FtNjpIrGnv7BOh7/oVt7hqvi8BzpiExoUjV0d0S0=
+go.jetify.com/pkg v0.0.0-20250717231756-146bdaf5a718 h1:7//pmsdybvyum5o2gU1IrMl64ymJ6qwT4fLP+8yVE94=
+go.jetify.com/pkg v0.0.0-20250717231756-146bdaf5a718/go.mod h1:spU50M2nfHA0YRYyCp0S3FhD+Maw0X10xTMMuFrHHEM=
 go.jetify.com/typeid/v2 v2.0.0-alpha.3 h1:T6RPx6bNl10lp0JN2Xz/XcgLZWSlVmL58Xqy9cgTCcc=
 go.jetify.com/typeid/v2 v2.0.0-alpha.3/go.mod h1:zfD1ZDHDJNgXZANsO9jDOD81XRRQ0zAOnDBEHmIV/Gw=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
