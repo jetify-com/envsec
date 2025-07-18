@@ -21,7 +21,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/samber/lo v1.51.0
 	github.com/spf13/cobra v1.9.1
-	go.jetify.com/pkg v0.0.0-20250717231756-146bdaf5a718
+	go.jetify.com/pkg v0.0.0-20250718155539-5325ad8be56c
 	golang.org/x/text v0.27.0
 )
 
@@ -44,9 +44,9 @@ require (
 	github.com/coreos/go-oidc/v3 v3.14.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/creack/pty v1.1.24 // indirect
-	github.com/go-jose/go-jose/v3 v3.0.4 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.1 // indirect
 	github.com/gofrs/uuid/v5 v5.3.2 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/renameio/v2 v2.0.0 // indirect
 	github.com/gosimple/slug v1.15.0 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
@@ -72,7 +72,6 @@ require (
 	go.jetify.com/typeid/v2 v2.0.0-alpha.3 // indirect
 	golang.org/x/crypto v0.40.0 // indirect
 	golang.org/x/exp v0.0.0-20250717185816-542afb5b7346 // indirect
-	golang.org/x/net v0.42.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sys v0.34.0 // indirect
 	golang.org/x/term v0.33.0 // indirect
