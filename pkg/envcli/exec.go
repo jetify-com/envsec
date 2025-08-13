@@ -48,6 +48,6 @@ func ExecCmd() *cobra.Command {
 			return commandToRun.Run()
 		},
 	}
-	flags.configFlags.register(command)
+	flags.register(command)
 	return command
 }

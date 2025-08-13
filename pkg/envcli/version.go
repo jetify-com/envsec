@@ -35,14 +35,14 @@ func versionCmd() *cobra.Command {
 func versionCmdFunc(cmd *cobra.Command, _ []string, flags versionFlags) error {
 	w := cmd.OutOrStdout()
 	if flags.verbose {
-		fmt.Fprintf(w, "Version:     %v\n", build.Version)
-		fmt.Fprintf(w, "Build Env:   %v\n", build.BuildEnv())
-		fmt.Fprintf(w, "Platform:    %v\n", fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH))
-		fmt.Fprintf(w, "Commit:      %v\n", build.Commit)
-		fmt.Fprintf(w, "Commit Time: %v\n", build.CommitDate)
-		fmt.Fprintf(w, "Go Version:  %v\n", runtime.Version())
+		_, _ = fmt.Fprintf(w, "Version:     %v\n", build.Version)
+		_, _ = fmt.Fprintf(w, "Build Env:   %v\n", build.BuildEnv())
+		_, _ = fmt.Fprintf(w, "Platform:    %v\n", fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH))
+		_, _ = fmt.Fprintf(w, "Commit:      %v\n", build.Commit)
+		_, _ = fmt.Fprintf(w, "Commit Time: %v\n", build.CommitDate)
+		_, _ = fmt.Fprintf(w, "Go Version:  %v\n", runtime.Version())
 	} else {
-		fmt.Fprintf(w, "%v\n", build.Version)
+		_, _ = fmt.Fprintf(w, "%v\n", build.Version)
 	}
 	return nil
 }

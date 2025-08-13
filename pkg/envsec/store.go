@@ -18,7 +18,7 @@ type EnvID struct {
 	EnvName string
 }
 
-func NewEnvID(projectID string, orgID string, envName string) (EnvID, error) {
+func NewEnvID(projectID, orgID, envName string) (EnvID, error) {
 	if projectID == "" {
 		return EnvID{}, errors.New("ProjectId can not be empty")
 	}
@@ -33,7 +33,7 @@ type Store interface {
 	// List all environmnent variables and their values associated with the given envId.
 	List(ctx context.Context, envID EnvID) ([]EnvVar, error)
 	// Set the value of an environment variable.
-	Set(ctx context.Context, envID EnvID, name string, value string) error
+	Set(ctx context.Context, envID EnvID, name, value string) error
 	// Set the values of multiple environment variables.
 	SetAll(ctx context.Context, envID EnvID, values map[string]string) error
 	// Get the value of an environment variable.

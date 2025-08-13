@@ -39,7 +39,7 @@ func loginCmd() *cobra.Command {
 
 			_, err = client.LoginFlow()
 			if err == nil {
-				fmt.Fprintln(cmd.OutOrStdout(), "Logged in successfully")
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Logged in successfully")
 			}
 			return err
 		},
@@ -61,7 +61,7 @@ func logoutCmd() *cobra.Command {
 
 			err = client.LogoutFlow()
 			if err == nil {
-				fmt.Fprintln(cmd.OutOrStdout(), "Logged out successfully")
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Logged out successfully")
 			}
 			return err
 		},

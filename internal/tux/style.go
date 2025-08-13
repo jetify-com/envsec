@@ -35,7 +35,7 @@ type StyleRule struct {
 	MarginLeft         int
 }
 
-func Render(styleSheet StyleSheet, class string, text string) string {
+func Render(styleSheet StyleSheet, class, text string) string {
 	return text
 }
 
@@ -68,7 +68,7 @@ func Renderer(styleRule StyleRule, tokens map[string]string) StyleRenderer {
 	return renderer
 }
 
-func getColor(token string, invertedToken string, tokens map[string]string) lipgloss.TerminalColor {
+func getColor(token, invertedToken string, tokens map[string]string) lipgloss.TerminalColor {
 	color := resolveToken(token, tokens)
 	invertedColor := resolveToken(invertedToken, tokens)
 
@@ -91,8 +91,8 @@ func resolveToken(token string, tokens map[string]string) string {
 	return token
 }
 
-func StyleFunc(styleSheet StyleSheet) func(class string, text string) string {
-	return func(class string, text string) string {
+func StyleFunc(styleSheet StyleSheet) func(class, text string) string {
+	return func(class, text string) string {
 		styleRule, exists := styleSheet.Styles[class]
 		// Return the text as is if the class is not found.
 		if !exists {

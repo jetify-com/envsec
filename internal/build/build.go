@@ -18,9 +18,10 @@ var (
 
 func init() {
 	buildEnv := strings.ToLower(os.Getenv("ENVSEC_BUILD_ENV"))
-	if buildEnv == "prod" {
+	switch buildEnv {
+	case "prod":
 		IsDev = false
-	} else if buildEnv == "dev" {
+	case "dev":
 		IsDev = true
 	}
 }

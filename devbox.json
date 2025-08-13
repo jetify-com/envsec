@@ -1,9 +1,8 @@
 {
-  "packages": [
-    "go@latest",
-    "golangci-lint@latest",
-    "runx:mvdan/gofumpt@latest",
-  ],
+  "packages": {
+    "go": "latest",
+    "golangci-lint": "latest"
+  },
   "shell": {
     "init_hook": [
       "export \"GOROOT=$(go env GOROOT)\"",
@@ -23,12 +22,7 @@
         "devbox run build",
         "dist/envsec auth login",
       ],
-      "fmt": [
-        "find . -name '*.go' -not -wholename './gen/*' -exec gofumpt -w -l {} \\+",
-        "if [ -n \"$CI\" ]; then",
-        "  git diff --exit-code",
-        "fi"
-      ],
+      "fmt": "golangci-lint run",
     }
   },
   "nixpkgs": {

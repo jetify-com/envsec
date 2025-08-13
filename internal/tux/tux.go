@@ -104,7 +104,7 @@ func QuotedTerms(terms []string) []string {
 	return q
 }
 
-func Plural[T any](items []T, singular string, plural string) string {
+func Plural[T any](items []T, singular, plural string) string {
 	if len(items) == 1 {
 		return singular
 	}

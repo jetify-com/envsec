@@ -33,6 +33,6 @@ func SetCmd() *cobra.Command {
 			return cmdCfg.envsec.SetFromArgs(ctx, args)
 		},
 	}
-	flags.configFlags.register(command)
+	flags.register(command)
 	return command
 }

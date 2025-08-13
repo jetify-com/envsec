@@ -62,7 +62,7 @@ func (j JetpackAPIStore) List(ctx context.Context, envID envsec.EnvID) ([]envsec
 	return result, nil
 }
 
-func (j JetpackAPIStore) Set(ctx context.Context, envID envsec.EnvID, name string, value string) error {
+func (j JetpackAPIStore) Set(ctx context.Context, envID envsec.EnvID, name, value string) error {
 	_, err := j.client.PatchSecret(
 		ctx, connect.NewRequest(
 			&secretsv1alpha1.PatchSecretRequest{

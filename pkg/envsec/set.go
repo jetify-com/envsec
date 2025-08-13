@@ -11,7 +11,7 @@ import (
 	"go.jetify.com/envsec/internal/tux"
 )
 
-func (e *Envsec) Set(ctx context.Context, name string, value string) error {
+func (e *Envsec) Set(ctx context.Context, name, value string) error {
 	return e.SetMap(ctx, map[string]string{name: value})
 }
 
