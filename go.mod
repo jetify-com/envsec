@@ -46,7 +46,7 @@ require (
 	github.com/creack/pty v1.1.24 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.2 // indirect
 	github.com/goccy/go-yaml v1.18.0 // indirect
-	github.com/gofrs/uuid/v5 v5.3.2 // indirect
+	github.com/gofrs/uuid/v5 v5.4.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/renameio/v2 v2.0.0 // indirect
 	github.com/gosimple/slug v1.15.0 // indirect
