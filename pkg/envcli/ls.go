@@ -37,7 +37,8 @@ func ListCmd() *cobra.Command {
 			}
 
 			return envsec.PrintEnvVar(
-				cmd.OutOrStdout(), cmdCfg.envsec.EnvID, secrets, flags.ShowValues, flags.Format)
+				cmd.OutOrStdout(), cmdCfg.envsec.EnvID, secrets, flags.ShowValues, flags.Format,
+			)
 		},
 	}
 
