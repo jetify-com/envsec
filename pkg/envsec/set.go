@@ -85,7 +85,7 @@ func parseSetArgs(args []string) (map[string]string, error) {
 	return envMap, nil
 }
 
-const nameRegexStr = "^[a-zA-Z_][a-zA-Z0-9_]*"
+const nameRegexStr = "^[a-zA-Z_][a-zA-Z0-9_]*$"
 
 var nameRegex = regexp.MustCompile(nameRegexStr)
 

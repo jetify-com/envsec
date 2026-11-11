@@ -57,9 +57,8 @@ func (e *Envsec) Download(ctx context.Context, path, format string) error {
 		return errors.WithStack(err)
 	}
 
-	err = os.WriteFile(path, contents, 0o644)
-	if err != nil {
-		return errors.WithStack(err)
+	if err = writeSecretFile(path, contents); err != nil {
+		return err
 	}
 	err = tux.WriteHeader(e.Stderr,
 		"[DONE] Downloaded environment variables to %q for environment: %s\n",
@@ -90,4 +89,30 @@ func encodeToDotEnv(m map[string]string) ([]byte, error) {
 		return nil, errors.WithStack(err)
 	}
 	return []byte(envContents), nil
+}
+
+// writeSecretFile writes contents to path so that only the current user can
+// read it. If the file already exists, its permissions are tightened to 0600
+// since it is about to hold secrets.
+func writeSecretFile(path string, contents []byte) error {
+	// Don't truncate on open: tighten permissions first so that if Chmod
+	// fails (e.g. the file belongs to another user) the existing contents
+	// are left untouched.
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0o600)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if err := f.Chmod(0o600); err != nil {
+		_ = f.Close()
+		return errors.WithStack(err)
+	}
+	if err := f.Truncate(0); err != nil {
+		_ = f.Close()
+		return errors.WithStack(err)
+	}
+	if _, err := f.Write(contents); err != nil {
+		_ = f.Close()
+		return errors.WithStack(err)
+	}
+	return errors.WithStack(f.Close())
 }
