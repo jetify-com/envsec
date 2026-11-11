@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"go.jetify.com/envsec/internal/claims"
 	"go.jetify.com/pkg/api"
 	"go.jetify.com/pkg/auth"
 )
@@ -34,7 +35,10 @@ func (e *Envsec) WhoAmI(
 		return err
 	}
 
-	idClaims := tok.IDClaims()
+	idClaims, err := claims.FromToken(tok)
+	if err != nil {
+		return err
+	}
 
 	_, _ = fmt.Fprintf(w, "Logged in\n")
 	_, _ = fmt.Fprintf(w, "User ID: %s\n", idClaims.Subject)
@@ -53,7 +57,7 @@ func (e *Envsec) WhoAmI(
 
 	apiClient := api.NewClient(ctx, e.APIHost, tok)
 
-	member, err := apiClient.GetMember(ctx, tok.IDClaims().Subject)
+	member, err := apiClient.GetMember(ctx, idClaims.Subject)
 	if err != nil {
 		return err
 	}

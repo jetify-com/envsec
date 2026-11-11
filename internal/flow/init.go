@@ -11,6 +11,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
+	"go.jetify.com/envsec/internal/claims"
 	"go.jetify.com/envsec/internal/git"
 	"go.jetify.com/pkg/api"
 	membersv1alpha1 "go.jetify.com/pkg/api/gen/priv/members/v1alpha1"
@@ -41,14 +42,19 @@ func (i *Init) Run(ctx context.Context) (ids.ProjectID, error) {
 		return ids.ProjectID{}, errors.New("aborted")
 	}
 
-	member, err := i.Client.GetMember(ctx, i.Token.IDClaims().Subject)
+	idClaims, err := claims.FromToken(i.Token)
+	if err != nil {
+		return ids.ProjectID{}, err
+	}
+
+	member, err := i.Client.GetMember(ctx, idClaims.Subject)
 	if err != nil {
 		return ids.ProjectID{}, err
 	}
 
 	// TODO: printOrgNotice will be a team picker once that is implemented.
 	i.printOrgNotice(member)
-	orgID, err := ids.ParseOrgID(i.Token.IDClaims().OrgID)
+	orgID, err := ids.ParseOrgID(idClaims.OrgID)
 	if err != nil {
 		return ids.ProjectID{}, err
 	}
@@ -145,7 +151,11 @@ func (i *Init) createNewPrompt(
 		return ids.ProjectID{}, err
 	}
 
-	orgID, err := ids.ParseOrgID(i.Token.IDClaims().OrgID)
+	idClaims, err := claims.FromToken(i.Token)
+	if err != nil {
+		return ids.ProjectID{}, err
+	}
+	orgID, err := ids.ParseOrgID(idClaims.OrgID)
 	if err != nil {
 		return ids.ProjectID{}, err
 	}

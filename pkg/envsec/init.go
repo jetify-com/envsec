@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"go.jetify.com/envsec/internal/claims"
 	"go.jetify.com/envsec/internal/flow"
 	"go.jetify.com/envsec/internal/git"
 	"go.jetify.com/pkg/api"
@@ -61,7 +62,11 @@ func (e *Envsec) NewProject(ctx context.Context, force bool) error {
 		return err
 	}
 
-	orgID, err := ids.ParseOrgID(tok.IDClaims().OrgID)
+	idClaims, err := claims.FromToken(tok)
+	if err != nil {
+		return err
+	}
+	orgID, err := ids.ParseOrgID(idClaims.OrgID)
 	if err != nil {
 		return err
 	}
