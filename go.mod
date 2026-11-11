@@ -72,6 +72,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spf13/pflag v1.1.0 // indirect
+	github.com/stretchr/testify v1.12.1 // indirect
 	github.com/tailscale/hujson v0.0.0-20260727124030-b80ff77dac4f // indirect
 	github.com/xo/terminfo v1.3.1 // indirect
 	go.jetify.com/typeid/v2 v2.0.0-alpha.3 // indirect
